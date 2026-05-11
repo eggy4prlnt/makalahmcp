@@ -270,8 +270,14 @@ def _add_kata_pengantar(doc, title, author="", nim="", city="", year=""):
     doc.add_page_break()
 
 
-def _add_toc_entry(doc, text, page_str, indent_cm=0, bold=False):
-    """Add a TOC entry with dot leader and page number using tab stop."""
+def _make_bookmark_id(text):
+    """Generate a clean bookmark ID from heading text."""
+    clean = re.sub(r'[^a-zA-Z0-9]', '_', text)
+    return f"_bm_{clean[:40]}"
+
+
+def _add_toc_entry(doc, text, page_str, indent_cm=0, bold=False, bookmark_name=None):
+    """Add a TOC entry with dot leader, page number, and optional hyperlink."""
     from docx.oxml.ns import qn
     from docx.oxml import OxmlElement
 
@@ -282,30 +288,80 @@ def _add_toc_entry(doc, text, page_str, indent_cm=0, bold=False):
         p.paragraph_format.left_indent = Cm(indent_cm)
 
     # Add right-aligned tab stop with dot leader
-    # Page width 21cm - left margin 3.5cm - right margin 3cm = 14.5cm usable
-    tab_pos = 14.5 - indent_cm  # adjust for indent
+    tab_pos = 14.5 - indent_cm
     pPr = p._p.get_or_add_pPr()
     tabs = OxmlElement('w:tabs')
     tab = OxmlElement('w:tab')
     tab.set(qn('w:val'), 'right')
     tab.set(qn('w:leader'), 'dot')
-    tab.set(qn('w:pos'), str(int(tab_pos * 567)))  # cm to twips
+    tab.set(qn('w:pos'), str(int(tab_pos * 567)))
     tabs.append(tab)
     pPr.append(tabs)
 
-    # Text
-    run = p.add_run(text)
-    run.bold = bold
-    run.font.name = "Times New Roman"
-    run.font.size = Pt(12)
+    if bookmark_name:
+        # Create hyperlink to bookmark
+        hyperlink = OxmlElement('w:hyperlink')
+        hyperlink.set(qn('w:anchor'), bookmark_name)
 
-    # Tab + page number
-    run = p.add_run("\t")
-    run.font.name = "Times New Roman"
-    run.font.size = Pt(12)
-    run = p.add_run(page_str)
-    run.font.name = "Times New Roman"
-    run.font.size = Pt(12)
+        run_el = OxmlElement('w:r')
+        rPr = OxmlElement('w:rPr')
+        rFonts = OxmlElement('w:rFonts')
+        rFonts.set(qn('w:ascii'), 'Times New Roman')
+        rFonts.set(qn('w:hAnsi'), 'Times New Roman')
+        rPr.append(rFonts)
+        sz = OxmlElement('w:sz')
+        sz.set(qn('w:val'), '24')  # 12pt = 24 half-points
+        rPr.append(sz)
+        if bold:
+            b = OxmlElement('w:b')
+            rPr.append(b)
+        # Blue color for hyperlink
+        color = OxmlElement('w:color')
+        color.set(qn('w:val'), '000000')
+        rPr.append(color)
+
+        run_el.append(rPr)
+        t = OxmlElement('w:t')
+        t.text = text
+        t.set(qn('xml:space'), 'preserve')
+        run_el.append(t)
+        hyperlink.append(run_el)
+
+        # Tab
+        tab_run = OxmlElement('w:r')
+        tab_t = OxmlElement('w:tab')
+        tab_run.append(tab_t)
+        hyperlink.append(tab_run)
+
+        # Page number
+        pg_run = OxmlElement('w:r')
+        pg_rPr = OxmlElement('w:rPr')
+        pg_rFonts = OxmlElement('w:rFonts')
+        pg_rFonts.set(qn('w:ascii'), 'Times New Roman')
+        pg_rFonts.set(qn('w:hAnsi'), 'Times New Roman')
+        pg_rPr.append(pg_rFonts)
+        pg_sz = OxmlElement('w:sz')
+        pg_sz.set(qn('w:val'), '24')
+        pg_rPr.append(pg_sz)
+        pg_run.append(pg_rPr)
+        pg_t = OxmlElement('w:t')
+        pg_t.text = page_str
+        pg_run.append(pg_t)
+        hyperlink.append(pg_run)
+
+        p._p.append(hyperlink)
+    else:
+        # No bookmark link — plain text
+        run = p.add_run(text)
+        run.bold = bold
+        run.font.name = "Times New Roman"
+        run.font.size = Pt(12)
+        run = p.add_run("\t")
+        run.font.name = "Times New Roman"
+        run.font.size = Pt(12)
+        run = p.add_run(page_str)
+        run.font.name = "Times New Roman"
+        run.font.size = Pt(12)
 
 
 def _add_daftar_isi(doc, headings):
@@ -313,16 +369,15 @@ def _add_daftar_isi(doc, headings):
     _add_centered_run(doc, "DAFTAR ISI", bold=True, size=14, spacing_after=12)
 
     # Front matter entries (fixed pages)
-    _add_toc_entry(doc, "KATA PENGANTAR", "ii")
+    _add_toc_entry(doc, "KATA PENGANTAR", "ii", bookmark_name="_bm_kata_pengantar")
     _add_toc_entry(doc, "DAFTAR ISI", "iii")
 
-    # Estimate page numbers for content
-    # Cover=1, Kata Pengantar=2, Daftar Isi=3, content starts at page 4
-    # Each BAB (h1) starts on new page in PDF, estimate ~2 pages per BAB for DOCX
+    # Content headings with bookmark links
     current_page = 1
     for h in headings:
         text = h["text"]
         level = h["level"]
+        bm = _make_bookmark_id(text)
 
         if level == 1:
             bab_match = re.match(r"^([IVX]+)\.\s*(.*)", text)
@@ -330,38 +385,50 @@ def _add_daftar_isi(doc, headings):
                 label = f"BAB {bab_match.group(1)} {bab_match.group(2).upper()}"
             else:
                 label = text.upper()
-            _add_toc_entry(doc, label, str(current_page), bold=True)
-            current_page += 2  # estimate 2 pages per BAB
+            _add_toc_entry(doc, label, str(current_page), bold=True, bookmark_name=bm)
+            current_page += 2
         elif level == 2:
-            _add_toc_entry(doc, text, str(current_page), indent_cm=1.0)
+            _add_toc_entry(doc, text, str(current_page), indent_cm=1.0, bookmark_name=bm)
             current_page += 1
         else:
-            _add_toc_entry(doc, text, str(current_page), indent_cm=2.0)
+            _add_toc_entry(doc, text, str(current_page), indent_cm=2.0, bookmark_name=bm)
 
     doc.add_page_break()
 
 
 def _render_blocks_to_doc(doc, blocks, image_counter=1):
     """Render parsed blocks into the document. Returns updated image counter."""
+    from docx.oxml.ns import qn
+    from docx.oxml import OxmlElement
+
+    def _add_bookmark(paragraph, name):
+        """Insert a bookmark at this paragraph for TOC linking."""
+        tag = paragraph._p
+        bookmark_start = OxmlElement('w:bookmarkStart')
+        bookmark_start.set(qn('w:id'), str(id(name) % 100000))
+        bookmark_start.set(qn('w:name'), name)
+        bookmark_end = OxmlElement('w:bookmarkEnd')
+        bookmark_end.set(qn('w:id'), str(id(name) % 100000))
+        tag.insert(0, bookmark_start)
+        tag.append(bookmark_end)
+
     for block in blocks:
         if block["type"] == "heading":
             level = block["level"]
             text = block["text"]
+            bm_name = _make_bookmark_id(text)
 
             if level == 1:
-                # Check if it's a BAB heading (starts with roman numeral pattern)
                 bab_match = re.match(r"^([IVX]+)\.\s*(.*)", text)
                 if bab_match:
-                    # BAB number centered
-                    _add_centered_run(doc, f"BAB {bab_match.group(1)}", bold=True, size=14, spacing_after=6)
-                    # BAB title centered
+                    p = _add_centered_run(doc, f"BAB {bab_match.group(1)}", bold=True, size=14, spacing_after=6)
+                    _add_bookmark(p, bm_name)
                     if bab_match.group(2):
                         _add_centered_run(doc, bab_match.group(2).upper(), bold=True, size=14, spacing_after=12)
                 else:
-                    # Non-BAB heading (like "Daftar Pustaka")
-                    _add_centered_run(doc, text.upper(), bold=True, size=14, spacing_after=12)
+                    p = _add_centered_run(doc, text.upper(), bold=True, size=14, spacing_after=12)
+                    _add_bookmark(p, bm_name)
             else:
-                # Sub-headings: left-aligned, bold
                 p = doc.add_paragraph()
                 p.paragraph_format.space_before = Pt(12)
                 p.paragraph_format.space_after = Pt(6)
@@ -370,6 +437,7 @@ def _render_blocks_to_doc(doc, blocks, image_counter=1):
                 run.bold = True
                 run.font.name = "Times New Roman"
                 run.font.size = Pt(12)
+                _add_bookmark(p, bm_name)
 
         elif block["type"] == "paragraph":
             p = doc.add_paragraph(block["text"])
@@ -611,8 +679,8 @@ def _build_kata_pengantar_pdf(pdf, title, author="", year=""):
         pdf.cell(0, 7, author, align="R", new_x="LMARGIN", new_y="NEXT")
 
 
-def _pdf_toc_entry(pdf, text, page_str, indent=0, bold=False):
-    """Add a TOC entry with dot leaders and page number in PDF."""
+def _pdf_toc_entry(pdf, text, page_str, indent=0, bold=False, link=None):
+    """Add a TOC entry with dot leaders, page number, and optional clickable link."""
     style = "B" if bold else ""
     pdf._set_font_safe("Times", style, 12)
 
@@ -624,24 +692,30 @@ def _pdf_toc_entry(pdf, text, page_str, indent=0, bold=False):
     page_w = pdf.get_string_width(page_str)
     dot_w = pdf.get_string_width(".")
     available = pdf.w - pdf.r_margin - x_start
-    dots_space = available - text_w - page_w - 4  # 4mm padding
+    dots_space = available - text_w - page_w - 4
 
-    # Build dot string
     if dots_space > 0 and dot_w > 0:
         num_dots = int(dots_space / dot_w)
         dots = " " + "." * num_dots + " "
     else:
         dots = " "
 
-    # Write entry
+    # Write entry — record position for link overlay
+    y_before = pdf.get_y()
+    x_before = pdf.get_x()
     pdf.cell(text_w, 7, text)
     pdf._set_font_safe("Times", "", 12)
     pdf.cell(dots_space + 4, 7, dots, align="C")
     pdf.cell(page_w, 7, page_str, new_x="LMARGIN", new_y="NEXT")
 
+    # Add clickable link region over the entire line
+    if link is not None:
+        total_w = pdf.w - pdf.r_margin - x_before
+        pdf.link(x_before, y_before, total_w, 7, link)
 
-def _build_daftar_isi_pdf(pdf, headings, page_map=None):
-    """Add Daftar Isi page to PDF with dot leaders."""
+
+def _build_daftar_isi_pdf(pdf, headings, page_map=None, link_map=None):
+    """Add Daftar Isi page to PDF with dot leaders and clickable links."""
     pdf.add_page()
 
     pdf._set_font_safe("Times", "B", 14)
@@ -653,12 +727,13 @@ def _build_daftar_isi_pdf(pdf, headings, page_map=None):
     _pdf_toc_entry(pdf, "DAFTAR ISI", "iii")
     pdf.ln(2)
 
-    # Content headings with page numbers from map or estimate
+    # Content headings with page numbers and links
     est_page = 1
     for i, h in enumerate(headings):
         level = h["level"]
         text = h["text"]
         pg = str(page_map.get(i, est_page)) if page_map else str(est_page)
+        lnk = link_map.get(i) if link_map else None
 
         if level == 1:
             bab_match = re.match(r"^([IVX]+)\.\s*(.*)", text)
@@ -666,17 +741,20 @@ def _build_daftar_isi_pdf(pdf, headings, page_map=None):
                 label = f"BAB {bab_match.group(1)} {bab_match.group(2).upper()}"
             else:
                 label = text.upper()
-            _pdf_toc_entry(pdf, label, pg, bold=True)
+            _pdf_toc_entry(pdf, label, pg, bold=True, link=lnk)
             est_page += 2
         elif level == 2:
-            _pdf_toc_entry(pdf, text, pg, indent=10)
+            _pdf_toc_entry(pdf, text, pg, indent=10, link=lnk)
             est_page += 1
         else:
-            _pdf_toc_entry(pdf, text, pg, indent=20)
+            _pdf_toc_entry(pdf, text, pg, indent=20, link=lnk)
 
 
-def _render_blocks_to_pdf(pdf, blocks, image_counter=1):
+def _render_blocks_to_pdf(pdf, blocks, image_counter=1, link_map=None):
     """Render parsed markdown blocks into PDF. Returns updated image counter."""
+    heading_idx = 0
+    headings = _extract_headings(blocks)
+
     for block in blocks:
         if block["type"] == "heading":
             level = block["level"]
@@ -685,8 +763,10 @@ def _render_blocks_to_pdf(pdf, blocks, image_counter=1):
             if level == 1:
                 bab_match = re.match(r"^([IVX]+)\.\s*(.*)", text)
                 if bab_match:
-                    # New page for each BAB
                     pdf.add_page()
+                    # Set link destination at top of this page
+                    if link_map and heading_idx in link_map:
+                        pdf.set_link(link_map[heading_idx], y=0, page=pdf.page_no())
                     pdf._set_font_safe("Times", "B", 14)
                     pdf.cell(0, 8, f"BAB {bab_match.group(1)}", align="C", new_x="LMARGIN", new_y="NEXT")
                     pdf.ln(3)
@@ -695,14 +775,20 @@ def _render_blocks_to_pdf(pdf, blocks, image_counter=1):
                     pdf.ln(8)
                 else:
                     pdf.add_page()
+                    if link_map and heading_idx in link_map:
+                        pdf.set_link(link_map[heading_idx], y=0, page=pdf.page_no())
                     pdf._set_font_safe("Times", "B", 14)
                     pdf.cell(0, 8, text.upper(), align="C", new_x="LMARGIN", new_y="NEXT")
                     pdf.ln(8)
             else:
+                if link_map and heading_idx in link_map:
+                    pdf.set_link(link_map[heading_idx], y=pdf.get_y(), page=pdf.page_no())
                 pdf._set_font_safe("Times", "B", 12)
                 pdf.ln(5)
                 pdf.multi_cell(0, 7, text, new_x="LMARGIN", new_y="NEXT")
                 pdf.ln(3)
+
+            heading_idx += 1
 
         elif block["type"] == "paragraph":
             pdf._set_font_safe("Times", "", 12)
@@ -819,14 +905,22 @@ def save_as_pdf(content, title, output_path, title_en="", lecturer="",
             pdf_track.set_x(pdf_track.l_margin + 10)
             pdf_track.multi_cell(0, 7, f"- {block['text']}", new_x="LMARGIN", new_y="NEXT")
 
-    # Pass 2: final render with accurate TOC
+    # Pass 2: final render with accurate TOC and clickable links
     pdf = MakalahPDF()
+
+    # Create internal links for each heading (set temp destination, update later)
+    link_map = {}
+    for i in range(len(headings)):
+        lnk = pdf.add_link()
+        pdf.set_link(lnk, page=1)  # temporary, will be updated in _render_blocks_to_pdf
+        link_map[i] = lnk
+
     _build_cover_pdf(pdf, **cover_kwargs)
     _build_kata_pengantar_pdf(pdf, title=title, author=author, year=year)
-    _build_daftar_isi_pdf(pdf, headings, page_map=page_map)
+    _build_daftar_isi_pdf(pdf, headings, page_map=page_map, link_map=link_map)
     pdf._content_start_page = pdf.page_no() + 1
     pdf._page_number_style = "arabic"
-    _render_blocks_to_pdf(pdf, blocks)
+    _render_blocks_to_pdf(pdf, blocks, link_map=link_map)
 
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
     pdf.output(output_path)

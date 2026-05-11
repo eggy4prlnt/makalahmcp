@@ -131,34 +131,50 @@ Gunakan referensi berikut sebagai sumber:
 
 ## ATURAN PENTING
 
-### Panjang Konten
-- Setiap BAB harus PANJANG dan DETAIL, minimal 3-5 paragraf per sub-bab
-- Setiap paragraf minimal 4-6 kalimat
-- Total makalah minimal 3000-5000 kata
-- Jangan ringkas, jangan singkat. Tulis selengkap dan sedetail mungkin
-- Elaborasi setiap poin dengan penjelasan, contoh, dan analisis mendalam
+### Panjang Konten — INI SANGAT PENTING
+- Makalah harus SANGAT PANJANG dan SANGAT DETAIL. Target minimal 5000-8000 kata.
+- Setiap sub-bab harus memiliki minimal 4-6 paragraf PANJANG
+- Setiap paragraf harus 5-8 kalimat, bukan 1-2 kalimat
+- JANGAN pernah menulis paragraf pendek. Setiap paragraf harus penuh penjelasan.
+- Elaborasi setiap poin dengan: definisi, penjelasan mendalam, contoh konkret, data/angka, dampak/implikasi, dan hubungan dengan teori
+- Gunakan banyak referensi dan kutipan dalam setiap bab
+- Tulis seolah-olah ini adalah makalah untuk tugas akhir kuliah yang sangat penting
+
+### Cara Menulis Pembahasan yang Detail
+Contoh BURUK (terlalu singkat):
+"Dashboard interaktif terbukti efektif dalam menyajikan data operasional."
+
+Contoh BAIK (detail dan mendalam):
+"Penerapan dashboard interaktif dalam konteks operasional teknologi informasi telah menunjukkan efektivitas yang sangat signifikan dalam menyajikan data operasional secara komprehensif. Berdasarkan hasil analisis yang telah dilakukan, dashboard yang dibangun menggunakan Power BI mampu mengintegrasikan berbagai sumber data seperti log server, tiket helpdesk, dan laporan performa jaringan ke dalam satu tampilan visual yang koheren dan mudah dipahami oleh berbagai tingkatan pemangku kepentingan. Kemampuan drill-down yang disediakan oleh dashboard memungkinkan pengguna untuk menelusuri data dari tingkat agregat hingga tingkat detail yang paling granular, sehingga analisis root cause terhadap permasalahan operasional dapat dilakukan dengan lebih cepat dan akurat. Hal ini sejalan dengan temuan penelitian sebelumnya yang menunjukkan bahwa visualisasi data interaktif mampu meningkatkan kecepatan pengambilan keputusan hingga 5 kali lipat dibandingkan metode pelaporan konvensional berbasis spreadsheet (Silvianingsih 2024)."
+
+Tulis SEMUA paragraf dengan level detail seperti contoh BAIK di atas.
 
 ### Struktur (gunakan heading markdown #)
 PENTING: Kata Pengantar dan Daftar Isi TIDAK perlu ditulis dalam konten markdown.
 Keduanya akan di-generate OTOMATIS oleh sistem saat konversi ke DOCX/PDF.
 Mulai langsung dari Abstrak.
+
 # I. Abstrak
-(Dalam Bahasa Indonesia DAN Bahasa Inggris, masing-masing 150-250 kata)
+(Dalam Bahasa Indonesia DAN Bahasa Inggris, masing-masing 200-300 kata)
 
 # II. Pendahuluan
-## 1.1 Latar Belakang (minimal 4 paragraf panjang)
-## 1.2 Rumusan Masalah
-## 1.3 Tujuan Penulisan
-## 1.4 Manfaat Penulisan
-## 1.5 Tinjauan Pustaka (minimal 3 paragraf, kutip referensi)
+## 1.1 Latar Belakang (minimal 5 paragraf panjang, jelaskan konteks luas sampai spesifik)
+## 1.2 Rumusan Masalah (jelaskan dulu konteksnya, baru list pertanyaan)
+## 1.3 Tujuan Penulisan (jelaskan tujuan umum dulu, baru list tujuan khusus)
+## 1.4 Manfaat Penulisan (manfaat teoritis DAN praktis, masing-masing 1 paragraf)
+## 1.5 Tinjauan Pustaka (minimal 4 paragraf, bahas setiap referensi secara mendalam, bandingkan temuan antar referensi)
 
-# III. Metode Penelitian (minimal 3 paragraf)
+# III. Metode Penelitian
+(Minimal 4 paragraf: pendekatan, tahapan, alat/tools, serta justifikasi pemilihan metode)
 
-# IV. Hasil (minimal 4 paragraf, detail dan spesifik)
+# IV. Hasil
+(Minimal 5 paragraf: sajikan setiap temuan dengan data spesifik, angka, persentase, tren. Pisahkan per domain/kategori temuan. Jelaskan juga visualisasi yang dihasilkan.)
 
-# V. Pembahasan (minimal 5 paragraf, analisis mendalam, hubungkan dengan teori)
+# V. Pembahasan
+(Minimal 6 paragraf: analisis mendalam setiap temuan, hubungkan dengan teori dan referensi, bandingkan dengan penelitian terdahulu, jelaskan implikasi praktis, identifikasi keterbatasan, berikan rekomendasi. INI BAGIAN TERPENTING — harus paling panjang dan paling detail.)
 
-# VI. Simpulan (minimal 2 paragraf + saran)
+# VI. Simpulan
+(Minimal 3 paragraf: ringkasan temuan utama, kontribusi penelitian, saran untuk penelitian selanjutnya dengan detail)
 
 # Daftar Pustaka
 
