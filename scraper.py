@@ -17,23 +17,28 @@ HEADERS = {
 IMAGE_DIR = os.path.join(tempfile.gettempdir(), "makalahmcp", "images")
 
 
-async def google_search(query: str, num_results: int = 5) -> list[str]:
-    """Search Google and return a list of result URLs."""
-    url = "https://www.google.com/search"
-    params = {"q": query, "num": num_results + 5, "hl": "id"}
+async def web_search(query: str, num_results: int = 5) -> list[str]:
+    """Search the web using DuckDuckGo HTML and return a list of result URLs."""
+    url = "https://html.duckduckgo.com/html/"
+    data = {"q": query}
     async with httpx.AsyncClient(headers=HEADERS, follow_redirects=True, timeout=15) as client:
-        resp = await client.get(url, params=params)
+        resp = await client.post(url, data=data)
         resp.raise_for_status()
     soup = BeautifulSoup(resp.text, "html.parser")
     links: list[str] = []
-    for a_tag in soup.select("a[href]"):
-        href = a_tag["href"]
+    for a_tag in soup.select("a.result__a[href]"):
+        href = a_tag.get("href", "")
         if isinstance(href, list):
             href = href[0]
-        if href.startswith("/url?q="):
-            real_url = href.split("/url?q=")[1].split("&")[0]
-            if not any(x in real_url for x in ["google.com", "youtube.com", "webcache"]):
-                links.append(real_url)
+        # DuckDuckGo wraps URLs in a redirect, extract the actual URL
+        if "uddg=" in href:
+            from urllib.parse import unquote, parse_qs, urlparse as _urlparse
+            parsed = _urlparse(href)
+            qs = parse_qs(parsed.query)
+            if "uddg" in qs:
+                href = unquote(qs["uddg"][0])
+        if href.startswith("http") and "duckduckgo.com" not in href:
+            links.append(href)
         if len(links) >= num_results:
             break
     return links
@@ -138,8 +143,8 @@ async def fetch_page_content(url: str, image_start_idx: int = 0) -> dict:
 
 
 async def research_topic(title: str, num_results: int = 5) -> dict:
-    """Research a topic by searching Google and fetching content from results."""
-    urls = await google_search(title, num_results)
+    """Research a topic by searching the web and fetching content from results."""
+    urls = await web_search(title, num_results)
     if not urls:
         return {"references": [], "error": "Tidak dapat menemukan hasil pencarian. Coba judul yang berbeda."}
 
