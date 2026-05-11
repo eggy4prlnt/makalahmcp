@@ -198,16 +198,32 @@ Mulai langsung dari Abstrak.
 ## 1.5 Tinjauan Pustaka (minimal 4 paragraf, bahas setiap referensi secara mendalam, bandingkan temuan antar referensi)
 
 # III. Metode Penelitian
-(Minimal 4 paragraf: pendekatan, tahapan, alat/tools, serta justifikasi pemilihan metode)
+WAJIB punya sub-heading ##, contoh:
+## 3.1 Pendekatan Penelitian (minimal 2 paragraf)
+## 3.2 Tahapan Penelitian (minimal 2 paragraf)
+## 3.3 Alat dan Bahan (minimal 2 paragraf)
+## 3.4 Teknik Analisis Data (minimal 2 paragraf)
 
 # IV. Hasil
-(Minimal 5 paragraf: sajikan setiap temuan dengan data spesifik, angka, persentase, tren. Pisahkan per domain/kategori temuan. Jelaskan juga visualisasi yang dihasilkan.)
+WAJIB punya sub-heading ##, buat sub-heading per domain/kategori temuan, contoh:
+## 4.1 Hasil Analisis [domain 1] (minimal 2 paragraf dengan data spesifik, angka, persentase)
+## 4.2 Hasil Analisis [domain 2] (minimal 2 paragraf)
+## 4.3 Hasil Visualisasi Dashboard (minimal 2 paragraf, jelaskan visualisasi yang dihasilkan)
 
 # V. Pembahasan
-(Minimal 6 paragraf: analisis mendalam setiap temuan, hubungkan dengan teori dan referensi, bandingkan dengan penelitian terdahulu, jelaskan implikasi praktis, identifikasi keterbatasan, berikan rekomendasi. INI BAGIAN TERPENTING — harus paling panjang dan paling detail.)
+WAJIB punya sub-heading ##, buat sub-heading per topik pembahasan, contoh:
+## 5.1 Analisis [temuan 1] (minimal 3 paragraf, hubungkan dengan teori dan referensi)
+## 5.2 Analisis [temuan 2] (minimal 3 paragraf, bandingkan dengan penelitian terdahulu)
+## 5.3 Implikasi Praktis (minimal 2 paragraf)
+## 5.4 Keterbatasan Penelitian (minimal 1 paragraf)
+INI BAGIAN TERPENTING — harus paling panjang dan paling detail.
 
 # VI. Simpulan
-(Minimal 3 paragraf: ringkasan temuan utama, kontribusi penelitian, saran untuk penelitian selanjutnya dengan detail)
+WAJIB punya sub-heading ##:
+## 6.1 Kesimpulan (minimal 2 paragraf, ringkasan temuan utama)
+## 6.2 Saran (minimal 2 paragraf, saran untuk penelitian selanjutnya dengan detail)
+
+PENTING: SETIAP BAB WAJIB memiliki minimal 2 sub-heading (##). JANGAN pernah menulis BAB tanpa sub-heading. Daftar isi akan terlihat kosong jika BAB tidak punya sub-heading.
 
 # Daftar Pustaka
 
