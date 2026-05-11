@@ -554,25 +554,36 @@ def _pdf_kata_pengantar(pdf, title, author="", nim="", year=""):
 def _pdf_toc_entry(pdf, text, page_str, indent=0, link=None):
     pdf._font("", 12)
     x0 = pdf.l_margin + indent
-    pdf.set_x(x0)
-    tw = pdf.get_string_width(text + " ")
-    pw = pdf.get_string_width(" " + page_str)
-    avail = pdf.w - pdf.r_margin - x0
+    x_right = pdf.w - pdf.r_margin  # right edge for page number
+    pg_w = pdf.get_string_width(page_str) + 2  # page number width + padding
 
-    # Build continuous dots like the example: "........."
+    y0 = pdf.get_y()
+
+    # Calculate available width for text + dots
+    text_max_w = x_right - x0 - pg_w - 2
+    tw = pdf.get_string_width(text)
+
+    if tw > text_max_w:
+        # Text too long — truncate with ...
+        while pdf.get_string_width(text + "...") > text_max_w and len(text) > 10:
+            text = text[:-1]
+        text = text.rstrip() + "..."
+        tw = pdf.get_string_width(text)
+
+    # Build dots to fill remaining space
     dw = pdf.get_string_width(".")
-    ds = avail - tw - pw
-    num_dots = max(0, int(ds / dw)) if dw > 0 else 0
+    dot_space = text_max_w - tw
+    num_dots = max(0, int(dot_space / dw)) if dw > 0 else 0
     dot_str = "." * num_dots
 
-    y0 = pdf.get_y(); x0_abs = pdf.get_x()
-    pdf.cell(tw, 7, text + " ")
-    pdf._font("", 12)
-    remaining = avail - tw - pw
-    pdf.cell(remaining, 7, dot_str, align="R")
-    pdf.cell(pw, 7, " " + page_str, new_x="LMARGIN", new_y="NEXT")
+    # Render: text, dots, then page number at fixed right position
+    pdf.set_x(x0)
+    pdf.cell(tw + 1, 7, text)
+    pdf.cell(dot_space, 7, dot_str)
+    pdf.cell(pg_w, 7, page_str, align="R", new_x="LMARGIN", new_y="NEXT")
+
     if link is not None:
-        pdf.link(x0_abs, y0, avail, 7, link)
+        pdf.link(x0, y0, x_right - x0, 7, link)
 
 
 def _pdf_toc_label(pdf, text):
