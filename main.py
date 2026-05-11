@@ -218,19 +218,18 @@ Mulai langsung dari Abstrak.
 - Multiple referensi: (Abbott 1991; Kelso and Smith 1998)
 - Kutipan langsung dengan halaman: (Wiegand and Gouws 2013: 273)
 
-### Format Daftar Pustaka — HARUS BANYAK (minimal 8-15 referensi)
+### Format Daftar Pustaka — HARUS BANYAK (minimal 8-15 referensi) dan SEMUA WAJIB ADA URL
 - Urutkan alfabetis
-- Untuk sumber website, WAJIB sertakan URL lengkap
-- Format buku: Nama, Inisial. Tahun. Judul. Kota: Penerbit.
-- Format jurnal: Nama, Inisial. Tahun. "Judul Artikel". Nama Jurnal, Volume(Nomor), Halaman.
-- Format website: Nama/Organisasi. Tahun. "Judul Artikel". URL. Diakses pada tanggal.
-- Contoh website: Kompas. 2024. "Dampak Media Sosial pada Remaja". https://lifestyle.kompas.com/read/2024/dampak-media-sosial. Diakses pada 11 Mei 2026.
-- Contoh buku: Arief, M. Sarief. 2010. Politik Film di Hindia Belanda. Jakarta: Komunitas Bambu.
-- Contoh jurnal: Wibowo, A. 2020. "Analisis Deskriptif Data Operasional TI". Jurnal Teknologi Informasi, 12(3), 45-58.
-- SEMUA referensi dari research WAJIB masuk daftar pustaka dengan URL-nya
-- TAMBAHKAN juga referensi pendukung dari buku/jurnal yang relevan dengan topik (minimal 5 referensi tambahan). Gunakan referensi yang NYATA dan kredibel dari bidang terkait (buku teks, jurnal nasional/internasional, publikasi pemerintah, dll).
+- SETIAP referensi WAJIB menyertakan URL lengkap yang bisa diakses, TANPA KECUALI
+- Untuk buku: cari URL Google Books, perpustakaan online, atau toko buku online
+- Untuk jurnal: cari URL dari portal jurnal (Google Scholar, Garuda, Sinta, ResearchGate, dll)
+- Format: Nama, Inisial. Tahun. "Judul". Penerbit/Jurnal. URL. Diakses pada tanggal.
+- Contoh: Sugiyono. 2019. "Metode Penelitian Kuantitatif, Kualitatif, dan R&D". Bandung: Alfabeta. https://opac.perpusnas.go.id/DetailOpac.aspx?id=1133109. Diakses pada 11 Mei 2026.
+- Contoh jurnal: Wibowo, A. 2020. "Analisis Deskriptif Data Operasional TI". Jurnal Teknologi Informasi, 12(3), 45-58. https://jurnal.example.ac.id/index.php/jti/article/view/123. Diakses pada 11 Mei 2026.
+- SEMUA referensi dari research WAJIB masuk daftar pustaka dengan URL asli-nya
+- TAMBAHKAN juga referensi pendukung (minimal 5 tambahan) dari buku/jurnal yang relevan. Gunakan referensi NYATA dan kredibel. Setiap referensi tambahan HARUS punya URL yang masuk akal (Google Books, portal jurnal, repositori universitas, dll).
 - Setiap referensi di daftar pustaka HARUS dikutip minimal 1 kali di dalam teks makalah
-- JANGAN buat referensi fiktif. Gunakan nama penulis dan judul yang masuk akal dan umum di bidangnya
+- JANGAN buat referensi fiktif. Gunakan nama penulis dan judul yang umum di bidangnya
 
 ### Paraphrase
 - JANGAN copy-paste dari referensi, tulis ulang dengan kalimat sendiri
@@ -242,10 +241,23 @@ Mulai langsung dari Abstrak.
 - Jika ada gambar dari referensi, sisipkan dengan format: ![keterangan gambar](path_file)
 - Beri keterangan yang relevan pada setiap gambar
 
-### Bahasa
-- Gunakan bahasa akademik yang formal dan baku
-- Hindari bahasa sehari-hari atau slang
+### Bahasa — FULL BAHASA INDONESIA
+- SELURUH makalah WAJIB ditulis dalam Bahasa Indonesia yang baku dan formal
+- KECUALI bagian abstrak bahasa Inggris, SEMUA konten harus Bahasa Indonesia
+- Heading dan sub-heading dalam Bahasa Indonesia
+- Istilah asing boleh digunakan jika sudah umum (misal: dashboard, software, hardware) tapi berikan penjelasan dalam Bahasa Indonesia saat pertama kali muncul
+- Gunakan bahasa akademik formal, hindari bahasa sehari-hari atau slang
 - Gunakan kalimat pasif jika diperlukan untuk gaya akademik
+- JANGAN campur bahasa Inggris di dalam paragraf kecuali istilah teknis yang memang tidak ada padanannya
+
+### Detail Konten — SETIAP POIN HARUS DIELABORASI
+- Jangan hanya menyebutkan poin, tapi JELASKAN secara mendalam
+- Setiap poin dalam rumusan masalah harus dibahas tuntas di BAB Pembahasan
+- Setiap sub-bab harus memiliki pengantar, isi detail, dan penutup/transisi ke sub-bab berikutnya
+- Jika menyebutkan data/angka, jelaskan konteks, signifikansi, dan implikasinya
+- Jika menyebutkan teori, jelaskan definisi, penemu, dan relevansinya dengan topik
+- Jika menyebutkan hasil, jelaskan proses, temuan spesifik, dan interpretasinya
+- BAB Pembahasan harus paling panjang — analisis mendalam setiap temuan, bandingkan dengan teori dan penelitian terdahulu
 """
 
 
