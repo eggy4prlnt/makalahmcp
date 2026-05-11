@@ -18,6 +18,8 @@ def _parse_markdown_to_blocks(content: str) -> list[dict]:
     blocks = []
     lines = content.split("\n")
     i = 0
+    in_daftar_pustaka = False
+
     while i < len(lines):
         line = lines[i].strip()
         if not line:
@@ -27,7 +29,10 @@ def _parse_markdown_to_blocks(content: str) -> list[dict]:
         heading_match = re.match(r"^(#{1,3})\s+(.*)", line)
         if heading_match:
             level = len(heading_match.group(1))
-            blocks.append({"type": "heading", "level": level, "text": heading_match.group(2)})
+            text = heading_match.group(2)
+            blocks.append({"type": "heading", "level": level, "text": text})
+            # Detect Daftar Pustaka section
+            in_daftar_pustaka = "daftar pustaka" in text.lower()
             i += 1
             continue
 
@@ -49,6 +54,13 @@ def _parse_markdown_to_blocks(content: str) -> list[dict]:
             i += 1
             continue
 
+        if in_daftar_pustaka:
+            # In Daftar Pustaka: each line is a separate reference entry
+            blocks.append({"type": "reference", "level": 0, "text": line})
+            i += 1
+            continue
+
+        # Regular paragraph — merge consecutive non-empty lines
         para_lines = [line]
         i += 1
         while i < len(lines) and lines[i].strip() and not re.match(r"^(#{1,3}\s|!\[|[-*]\s|\d+\.\s)", lines[i].strip()):
@@ -415,6 +427,17 @@ def _render_blocks_to_doc(doc, blocks, image_counter=1):
             for run in p.runs:
                 run.font.name = "Times New Roman"; run.font.size = Pt(12)
 
+        elif block["type"] == "reference":
+            # Daftar pustaka entry: hanging indent (first line flush, rest indented)
+            p = doc.add_paragraph(block["text"])
+            p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+            p.paragraph_format.line_spacing = 1.5
+            p.paragraph_format.left_indent = Cm(1.0)
+            p.paragraph_format.first_line_indent = Cm(-1.0)  # hanging indent
+            p.paragraph_format.space_after = Pt(6)
+            for run in p.runs:
+                run.font.name = "Times New Roman"; run.font.size = Pt(12)
+
     return image_counter
 
 
@@ -690,6 +713,21 @@ def _pdf_render(pdf, blocks, image_counter=1, link_map=None):
             pdf.set_x(pdf.l_margin + 10)
             pdf.multi_cell(0, 7, f"{prefix}{block['text']}", align="J", new_x="LMARGIN", new_y="NEXT")
 
+        elif block["type"] == "reference":
+            # Daftar pustaka entry: hanging indent
+            pdf._font("", 12)
+            text = block["text"]
+            # First line at left margin, continuation lines indented
+            indent = 10  # mm for hanging indent
+            pdf.set_x(pdf.l_margin)
+            # Use multi_cell with left margin adjustment for hanging effect
+            # Save x, print first part, then set indent for wrap
+            pdf.set_left_margin(pdf.l_margin + indent)
+            pdf.set_x(pdf.l_margin - indent)  # first line starts at original margin
+            pdf.multi_cell(0, 7, text, align="J", new_x="LMARGIN", new_y="NEXT")
+            pdf.set_left_margin(35)  # reset to original left margin
+            pdf.ln(1)
+
     return image_counter
 
 
@@ -743,6 +781,9 @@ def save_as_pdf(content, title, output_path, title_en="", lecturer="",
             pt._font("", 12)
             pt.set_x(pt.l_margin + 10)
             pt.multi_cell(0, 7, f"- {block['text']}", new_x="LMARGIN", new_y="NEXT")
+        elif block["type"] == "reference":
+            pt._font("", 12)
+            pt.multi_cell(0, 7, block["text"], new_x="LMARGIN", new_y="NEXT")
 
     # Pass 2: final render with links
     pdf = MakalahPDF()
