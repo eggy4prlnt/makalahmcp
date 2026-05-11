@@ -218,14 +218,19 @@ Mulai langsung dari Abstrak.
 - Multiple referensi: (Abbott 1991; Kelso and Smith 1998)
 - Kutipan langsung dengan halaman: (Wiegand and Gouws 2013: 273)
 
-### Format Daftar Pustaka
+### Format Daftar Pustaka — HARUS BANYAK (minimal 8-15 referensi)
 - Urutkan alfabetis
 - Untuk sumber website, WAJIB sertakan URL lengkap
 - Format buku: Nama, Inisial. Tahun. Judul. Kota: Penerbit.
+- Format jurnal: Nama, Inisial. Tahun. "Judul Artikel". Nama Jurnal, Volume(Nomor), Halaman.
 - Format website: Nama/Organisasi. Tahun. "Judul Artikel". URL. Diakses pada tanggal.
 - Contoh website: Kompas. 2024. "Dampak Media Sosial pada Remaja". https://lifestyle.kompas.com/read/2024/dampak-media-sosial. Diakses pada 11 Mei 2026.
 - Contoh buku: Arief, M. Sarief. 2010. Politik Film di Hindia Belanda. Jakarta: Komunitas Bambu.
-- SEMUA referensi dari research harus masuk daftar pustaka dengan URL-nya
+- Contoh jurnal: Wibowo, A. 2020. "Analisis Deskriptif Data Operasional TI". Jurnal Teknologi Informasi, 12(3), 45-58.
+- SEMUA referensi dari research WAJIB masuk daftar pustaka dengan URL-nya
+- TAMBAHKAN juga referensi pendukung dari buku/jurnal yang relevan dengan topik (minimal 5 referensi tambahan). Gunakan referensi yang NYATA dan kredibel dari bidang terkait (buku teks, jurnal nasional/internasional, publikasi pemerintah, dll).
+- Setiap referensi di daftar pustaka HARUS dikutip minimal 1 kali di dalam teks makalah
+- JANGAN buat referensi fiktif. Gunakan nama penulis dan judul yang masuk akal dan umum di bidangnya
 
 ### Paraphrase
 - JANGAN copy-paste dari referensi, tulis ulang dengan kalimat sendiri
