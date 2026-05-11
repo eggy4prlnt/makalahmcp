@@ -1,9 +1,11 @@
 import httpx
+import io
 import os
 import re
 import tempfile
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
+from pypdf import PdfReader
 
 HEADERS = {
     "User-Agent": (
@@ -72,8 +74,13 @@ async def _download_image(client: httpx.AsyncClient, img_url: str, idx: int) -> 
         return None
 
 
-async def fetch_page_content(url: str, image_start_idx: int = 0) -> dict:
-    """Fetch a web page and extract its text content, metadata, and images."""
+def _is_pdf_url(url: str, content_type: str = "") -> bool:
+    """Check if a URL points to a PDF file."""
+    return url.lower().endswith(".pdf") or "application/pdf" in content_type.lower()
+
+
+def _extract_pdf_content(pdf_bytes: bytes, url: str) -> dict:
+    """Extract text content from PDF bytes, reading all pages."""
     result = {
         "title": "",
         "url": url,
@@ -83,9 +90,67 @@ async def fetch_page_content(url: str, image_start_idx: int = 0) -> dict:
         "images": [],
     }
     try:
-        async with httpx.AsyncClient(headers=HEADERS, follow_redirects=True, timeout=15) as client:
+        reader = PdfReader(io.BytesIO(pdf_bytes))
+
+        # Extract metadata
+        meta = reader.metadata
+        if meta:
+            if meta.title:
+                result["title"] = meta.title
+            if meta.author:
+                result["author"] = meta.author
+            if meta.creation_date:
+                result["year"] = str(meta.creation_date.year)
+
+        # Extract text from all pages
+        pages_text = []
+        for i, page in enumerate(reader.pages):
+            text = page.extract_text()
+            if text and text.strip():
+                pages_text.append(f"[Halaman {i + 1}]\n{text.strip()}")
+
+        result["content"] = "\n\n".join(pages_text)
+
+        # If no title from metadata, try first line of content
+        if not result["title"] and pages_text:
+            first_lines = pages_text[0].split("\n")
+            for line in first_lines[1:]:  # skip "[Halaman 1]"
+                line = line.strip()
+                if len(line) > 10 and len(line) < 200:
+                    result["title"] = line
+                    break
+
+        # Try to extract year from content if not in metadata
+        if not result["year"] and result["content"]:
+            year_match = re.search(r"(20\d{2}|19\d{2})", result["content"][:500])
+            if year_match:
+                result["year"] = year_match.group(1)
+
+    except Exception:
+        pass
+    return result
+
+
+async def fetch_page_content(url: str, image_start_idx: int = 0) -> dict:
+    """Fetch a web page or PDF and extract its text content, metadata, and images."""
+    result = {
+        "title": "",
+        "url": url,
+        "author": "",
+        "year": "",
+        "content": "",
+        "images": [],
+    }
+    try:
+        async with httpx.AsyncClient(headers=HEADERS, follow_redirects=True, timeout=30) as client:
             resp = await client.get(url)
             resp.raise_for_status()
+            content_type = resp.headers.get("content-type", "")
+
+            # Handle PDF files
+            if _is_pdf_url(url, content_type):
+                return _extract_pdf_content(resp.content, url)
+
             soup = BeautifulSoup(resp.text, "html.parser")
 
             # Title
