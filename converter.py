@@ -555,39 +555,40 @@ def _pdf_toc_entry(pdf, text, page_str, indent=0, link=None):
     pdf._font("", 12)
     x0 = pdf.l_margin + indent
     x_right = pdf.w - pdf.r_margin
-    pg_w = pdf.get_string_width(page_str)
-    # Page number right-aligned: its right edge touches x_right
-    pg_x = x_right - pg_w
+    # Fixed-width cell for page number, right-aligned so all digits end at same x
+    pg_cell_w = 10  # enough for 2-3 digit page numbers
+    pg_x = x_right - pg_cell_w  # left edge of page number cell
 
     y0 = pdf.get_y()
     tw = pdf.get_string_width(text)
 
-    # Truncate if text too long
-    max_text_x = pg_x - 5  # leave at least 5mm for dots
-    if x0 + tw > max_text_x:
-        while pdf.get_string_width(text + "...") > (max_text_x - x0) and len(text) > 10:
-            text = text[:-1]
-        text = text.rstrip() + "..."
-        tw = pdf.get_string_width(text)
+    # Available space for text + dots (before page number cell)
+    avail = pg_x - x0 - 1  # -1mm gap before page number
 
-    # Dots fill from end of text to just before page number
-    dots_start_x = x0 + tw + 1
-    dots_end_x = pg_x - 1
-    dw = pdf.get_string_width(".")
-    dots_space = dots_end_x - dots_start_x
-    num_dots = max(0, int(dots_space / dw)) if dw > 0 else 0
+    if tw > avail:
+        # Text too long — show full text, put ". N" right after
+        # No truncation, just minimal dots
+        pdf.set_x(x0)
+        pdf.multi_cell(avail, 7, text, new_x="RIGHT", new_y="LAST")
+        # Dots (minimal)
+        dw = pdf.get_string_width(".")
+        remaining = pg_x - pdf.get_x()
+        if remaining > dw:
+            num_dots = int(remaining / dw)
+            pdf.cell(remaining, 7, "." * num_dots)
+    else:
+        # Normal: text + dots filling the space
+        dw = pdf.get_string_width(".")
+        dots_space = avail - tw
+        num_dots = max(0, int(dots_space / dw)) if dw > 0 else 0
 
-    # Render text
-    pdf.set_x(x0)
-    pdf.cell(tw, 7, text)
+        pdf.set_x(x0)
+        pdf.cell(tw, 7, text)
+        pdf.cell(dots_space, 7, "." * num_dots)
 
-    # Render dots at exact position
-    pdf.set_x(dots_start_x)
-    pdf.cell(dots_space, 7, "." * num_dots)
-
-    # Render page number at exact right-aligned position
+    # Page number: fixed-width cell, right-aligned — guarantees alignment
     pdf.set_x(pg_x)
-    pdf.cell(pg_w, 7, page_str, new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(pg_cell_w, 7, page_str, align="R", new_x="LMARGIN", new_y="NEXT")
 
     if link is not None:
         pdf.link(x0, y0, x_right - x0, 7, link)
