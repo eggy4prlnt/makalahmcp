@@ -71,8 +71,12 @@ def _parse_markdown_to_blocks(content: str) -> list[dict]:
     return blocks
 
 
+_SKIP_HEADINGS = {"kata pengantar", "daftar isi", "cover"}
+
+
 def _extract_headings(blocks):
-    return [b for b in blocks if b["type"] == "heading"]
+    return [b for b in blocks if b["type"] == "heading"
+            and b["text"].lower().strip() not in _SKIP_HEADINGS]
 
 
 def _make_bookmark_id(text):
@@ -366,6 +370,11 @@ def _render_blocks_to_doc(doc, blocks, image_counter=1):
         if block["type"] == "heading":
             level = block["level"]
             text = block["text"]
+
+            # Skip front matter headings (already generated separately)
+            if text.lower().strip() in _SKIP_HEADINGS:
+                continue
+
             bm = _make_bookmark_id(text)
 
             if level == 1:
@@ -664,6 +673,11 @@ def _pdf_render(pdf, blocks, image_counter=1, link_map=None):
     for block in blocks:
         if block["type"] == "heading":
             level = block["level"]; text = block["text"]
+
+            # Skip front matter headings
+            if text.lower().strip() in _SKIP_HEADINGS:
+                continue
+
             if level == 1:
                 pdf.add_page()
                 if link_map and heading_idx in link_map:
@@ -761,6 +775,8 @@ def save_as_pdf(content, title, output_path, title_en="", lecturer="",
     hidx = 0
     for block in blocks:
         if block["type"] == "heading":
+            if block["text"].lower().strip() in _SKIP_HEADINGS:
+                continue
             if block["level"] == 1:
                 pt.add_page()
             if hidx < len(headings):
