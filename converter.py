@@ -26,9 +26,9 @@ def _parse_markdown_to_blocks(content: str) -> list[dict]:
             i += 1
             continue
 
-        heading_match = re.match(r"^(#{1,3})\s+(.*)", line)
+        heading_match = re.match(r"^(#{1,6})\s+(.*)", line)
         if heading_match:
-            level = len(heading_match.group(1))
+            level = min(len(heading_match.group(1)), 3)  # cap at level 3
             text = heading_match.group(2)
             blocks.append({"type": "heading", "level": level, "text": text})
             # Detect Daftar Pustaka section
@@ -72,6 +72,18 @@ def _parse_markdown_to_blocks(content: str) -> list[dict]:
 
 
 _SKIP_HEADINGS = {"kata pengantar", "daftar isi", "cover"}
+
+_BULAN_ID = {
+    1: "Januari", 2: "Februari", 3: "Maret", 4: "April",
+    5: "Mei", 6: "Juni", 7: "Juli", 8: "Agustus",
+    9: "September", 10: "Oktober", 11: "November", 12: "Desember",
+}
+
+
+def _tanggal_indonesia():
+    """Return current date in Indonesian format: 'Kota, DD Bulan YYYY'"""
+    now = datetime.now()
+    return f"{now.day} {_BULAN_ID[now.month]} {now.year}"
 
 
 def _extract_headings(blocks):
@@ -152,15 +164,17 @@ def _add_cover_page(doc, title, title_en="", lecturer="", author="",
     doc.add_paragraph()  # spacing
     _centered(doc, "Di susun oleh:", size=12, after=6)
 
-    # Table for Nama / NIM / Dosen
+    # Table for Nama / NIM / Dosen — centered with fixed column widths
     if author or nim or lecturer:
         table = doc.add_table(rows=0, cols=2)
         table.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        # Set column widths to keep table compact and centered
+        table.columns[0].width = Cm(4.5)
+        table.columns[1].width = Cm(7.0)
 
         def _row(label, value):
             row = table.add_row()
             for cell in row.cells:
-                # remove borders
                 tc = cell._tc.get_or_add_tcPr()
                 borders = OxmlElement('w:tcBorders')
                 for edge in ('top', 'left', 'bottom', 'right'):
@@ -170,6 +184,10 @@ def _add_cover_page(doc, title, title_en="", lecturer="", author="",
                     borders.append(e)
                 tc.append(borders)
             c0, c1 = row.cells
+            c0.width = Cm(4.5)
+            c1.width = Cm(7.0)
+            c0.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
+            c1.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
             r0 = c0.paragraphs[0].add_run(label)
             r0.font.name = "Times New Roman"; r0.font.size = Pt(12)
             r1 = c1.paragraphs[0].add_run(f": {value}")
@@ -232,7 +250,7 @@ def _add_kata_pengantar(doc, title, author="", nim="", year=""):
     # Right-aligned date
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    r = p.add_run(f"{datetime.now().strftime('%B').capitalize()},\t\t{year}")
+    r = p.add_run(f"{_tanggal_indonesia()}")
     r.font.name = "Times New Roman"; r.font.size = Pt(12)
 
     doc.add_paragraph()
@@ -570,7 +588,7 @@ def _pdf_kata_pengantar(pdf, title, author="", nim="", year=""):
         pdf.multi_cell(0, 7, t, align="J", new_x="LMARGIN", new_y="NEXT")
         pdf.ln(3)
     pdf.ln(15)
-    pdf.cell(0, 7, f"{datetime.now().strftime('%B').capitalize()},\t\t{year}", align="R", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 7, f"{_tanggal_indonesia()}", align="R", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(10)
     pdf.cell(0, 7, "Penyusun", align="R", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(15)
@@ -688,11 +706,11 @@ def _pdf_render(pdf, blocks, image_counter=1, link_map=None):
                     pdf.cell(0, 8, f"BAB {bab_match.group(1)}", align="C", new_x="LMARGIN", new_y="NEXT")
                     pdf.ln(3)
                     if bab_match.group(2):
-                        pdf.cell(0, 8, bab_match.group(2).upper(), align="C", new_x="LMARGIN", new_y="NEXT")
+                        pdf.multi_cell(0, 8, bab_match.group(2).upper(), align="C", new_x="LMARGIN", new_y="NEXT")
                     pdf.ln(10)
                 else:
                     pdf._font("B", 14)
-                    pdf.cell(0, 8, text.upper(), align="C", new_x="LMARGIN", new_y="NEXT")
+                    pdf.multi_cell(0, 8, text.upper(), align="C", new_x="LMARGIN", new_y="NEXT")
                     pdf.ln(10)
             else:
                 if link_map and heading_idx in link_map:
