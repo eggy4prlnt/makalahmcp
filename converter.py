@@ -340,19 +340,19 @@ def _build_cover_pdf(
 
     # Title - uppercase, bold, 14pt
     pdf._set_font_safe("Times", "B", 14)
-    pdf.multi_cell(0, 8, title.upper(), align="C")
+    pdf.multi_cell(0, 8, title.upper(), align="C", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(3)
 
     # English title - italic
     if title_en:
         pdf._set_font_safe("Times", "I", 14)
-        pdf.multi_cell(0, 8, title_en, align="C")
+        pdf.multi_cell(0, 8, title_en, align="C", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(3)
 
     # Lecturer
     if lecturer:
         pdf._set_font_safe("Times", "", 12)
-        pdf.multi_cell(0, 7, f"Dosen Pengampu : {lecturer}", align="C")
+        pdf.multi_cell(0, 7, f"Dosen Pengampu : {lecturer}", align="C", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(10)
 
     # Logo
@@ -412,12 +412,12 @@ def _render_blocks_to_pdf(pdf: MakalahPDF, blocks: list[dict], image_counter: in
             size = 14 if level == 1 else 12
             pdf._set_font_safe("Times", "B", size)
             pdf.ln(5)
-            pdf.multi_cell(0, 8, block["text"])
+            pdf.multi_cell(0, 8, block["text"], new_x="LMARGIN", new_y="NEXT")
             pdf.ln(3)
 
         elif block["type"] == "paragraph":
             pdf._set_font_safe("Times", "", 12)
-            pdf.multi_cell(0, 7, block["text"])
+            pdf.multi_cell(0, 7, block["text"], new_x="LMARGIN", new_y="NEXT")
             pdf.ln(3)
 
         elif block["type"] == "image":
@@ -437,9 +437,7 @@ def _render_blocks_to_pdf(pdf: MakalahPDF, blocks: list[dict], image_counter: in
 
         elif block["type"] == "list_item":
             pdf._set_font_safe("Times", "", 12)
-            x = pdf.get_x()
-            pdf.cell(5, 7, chr(8226))  # bullet
-            pdf.multi_cell(0, 7, block["text"])
+            pdf.multi_cell(0, 7, f"- {block['text']}", new_x="LMARGIN", new_y="NEXT")
 
     return image_counter
 
