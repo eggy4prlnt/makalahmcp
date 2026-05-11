@@ -270,43 +270,73 @@ def _add_kata_pengantar(doc, title, author="", nim="", city="", year=""):
     doc.add_page_break()
 
 
+def _add_toc_entry(doc, text, page_str, indent_cm=0, bold=False):
+    """Add a TOC entry with dot leader and page number using tab stop."""
+    from docx.oxml.ns import qn
+    from docx.oxml import OxmlElement
+
+    p = doc.add_paragraph()
+    p.paragraph_format.line_spacing = 1.5
+    p.paragraph_format.space_after = Pt(0)
+    if indent_cm > 0:
+        p.paragraph_format.left_indent = Cm(indent_cm)
+
+    # Add right-aligned tab stop with dot leader
+    # Page width 21cm - left margin 3.5cm - right margin 3cm = 14.5cm usable
+    tab_pos = 14.5 - indent_cm  # adjust for indent
+    pPr = p._p.get_or_add_pPr()
+    tabs = OxmlElement('w:tabs')
+    tab = OxmlElement('w:tab')
+    tab.set(qn('w:val'), 'right')
+    tab.set(qn('w:leader'), 'dot')
+    tab.set(qn('w:pos'), str(int(tab_pos * 567)))  # cm to twips
+    tabs.append(tab)
+    pPr.append(tabs)
+
+    # Text
+    run = p.add_run(text)
+    run.bold = bold
+    run.font.name = "Times New Roman"
+    run.font.size = Pt(12)
+
+    # Tab + page number
+    run = p.add_run("\t")
+    run.font.name = "Times New Roman"
+    run.font.size = Pt(12)
+    run = p.add_run(page_str)
+    run.font.name = "Times New Roman"
+    run.font.size = Pt(12)
+
+
 def _add_daftar_isi(doc, headings):
-    """Add Daftar Isi (Table of Contents) page."""
+    """Add Daftar Isi (Table of Contents) page with dot leaders."""
     _add_centered_run(doc, "DAFTAR ISI", bold=True, size=14, spacing_after=12)
 
-    # Front matter entries
-    front_items = ["KATA PENGANTAR", "DAFTAR ISI"]
-    for item in front_items:
-        p = doc.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.LEFT
-        p.paragraph_format.line_spacing = 1.5
-        run = p.add_run(item)
-        run.font.name = "Times New Roman"
-        run.font.size = Pt(12)
+    # Front matter entries (fixed pages)
+    _add_toc_entry(doc, "KATA PENGANTAR", "ii")
+    _add_toc_entry(doc, "DAFTAR ISI", "iii")
 
-    # Content headings
+    # Estimate page numbers for content
+    # Cover=1, Kata Pengantar=2, Daftar Isi=3, content starts at page 4
+    # Each BAB (h1) starts on new page in PDF, estimate ~2 pages per BAB for DOCX
+    current_page = 1
     for h in headings:
-        p = doc.add_paragraph()
-        p.paragraph_format.line_spacing = 1.5
-
         text = h["text"]
         level = h["level"]
 
         if level == 1:
-            # BAB heading - no indent
-            run = p.add_run(text.upper())
-            run.bold = True
+            bab_match = re.match(r"^([IVX]+)\.\s*(.*)", text)
+            if bab_match:
+                label = f"BAB {bab_match.group(1)} {bab_match.group(2).upper()}"
+            else:
+                label = text.upper()
+            _add_toc_entry(doc, label, str(current_page), bold=True)
+            current_page += 2  # estimate 2 pages per BAB
         elif level == 2:
-            # Sub-heading - slight indent
-            p.paragraph_format.left_indent = Cm(1.0)
-            run = p.add_run(text)
+            _add_toc_entry(doc, text, str(current_page), indent_cm=1.0)
+            current_page += 1
         else:
-            # Sub-sub-heading
-            p.paragraph_format.left_indent = Cm(2.0)
-            run = p.add_run(text)
-
-        run.font.name = "Times New Roman"
-        run.font.size = Pt(12)
+            _add_toc_entry(doc, text, str(current_page), indent_cm=2.0)
 
     doc.add_page_break()
 
@@ -581,36 +611,68 @@ def _build_kata_pengantar_pdf(pdf, title, author="", year=""):
         pdf.cell(0, 7, author, align="R", new_x="LMARGIN", new_y="NEXT")
 
 
-def _build_daftar_isi_pdf(pdf, headings):
-    """Add Daftar Isi page to PDF."""
+def _pdf_toc_entry(pdf, text, page_str, indent=0, bold=False):
+    """Add a TOC entry with dot leaders and page number in PDF."""
+    style = "B" if bold else ""
+    pdf._set_font_safe("Times", style, 12)
+
+    x_start = pdf.l_margin + indent
+    pdf.set_x(x_start)
+
+    # Calculate widths
+    text_w = pdf.get_string_width(text)
+    page_w = pdf.get_string_width(page_str)
+    dot_w = pdf.get_string_width(".")
+    available = pdf.w - pdf.r_margin - x_start
+    dots_space = available - text_w - page_w - 4  # 4mm padding
+
+    # Build dot string
+    if dots_space > 0 and dot_w > 0:
+        num_dots = int(dots_space / dot_w)
+        dots = " " + "." * num_dots + " "
+    else:
+        dots = " "
+
+    # Write entry
+    pdf.cell(text_w, 7, text)
+    pdf._set_font_safe("Times", "", 12)
+    pdf.cell(dots_space + 4, 7, dots, align="C")
+    pdf.cell(page_w, 7, page_str, new_x="LMARGIN", new_y="NEXT")
+
+
+def _build_daftar_isi_pdf(pdf, headings, page_map=None):
+    """Add Daftar Isi page to PDF with dot leaders."""
     pdf.add_page()
 
     pdf._set_font_safe("Times", "B", 14)
     pdf.cell(0, 8, "DAFTAR ISI", align="C", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(10)
 
-    pdf._set_font_safe("Times", "", 12)
+    # Front matter (fixed)
+    _pdf_toc_entry(pdf, "KATA PENGANTAR", "ii")
+    _pdf_toc_entry(pdf, "DAFTAR ISI", "iii")
+    pdf.ln(2)
 
-    # Front matter
-    pdf.cell(0, 7, "KATA PENGANTAR", new_x="LMARGIN", new_y="NEXT")
-    pdf.cell(0, 7, "DAFTAR ISI", new_x="LMARGIN", new_y="NEXT")
-    pdf.ln(3)
-
-    for h in headings:
+    # Content headings with page numbers from map or estimate
+    est_page = 1
+    for i, h in enumerate(headings):
         level = h["level"]
         text = h["text"]
+        pg = str(page_map.get(i, est_page)) if page_map else str(est_page)
 
         if level == 1:
-            pdf._set_font_safe("Times", "B", 12)
-            pdf.cell(0, 7, text.upper(), new_x="LMARGIN", new_y="NEXT")
+            bab_match = re.match(r"^([IVX]+)\.\s*(.*)", text)
+            if bab_match:
+                label = f"BAB {bab_match.group(1)} {bab_match.group(2).upper()}"
+            else:
+                label = text.upper()
+            _pdf_toc_entry(pdf, label, pg, bold=True)
+            est_page += 2
         elif level == 2:
-            pdf._set_font_safe("Times", "", 12)
-            pdf.set_x(pdf.l_margin + 10)
-            pdf.cell(0, 7, text, new_x="LMARGIN", new_y="NEXT")
+            _pdf_toc_entry(pdf, text, pg, indent=10)
+            est_page += 1
         else:
-            pdf._set_font_safe("Times", "", 12)
-            pdf.set_x(pdf.l_margin + 20)
-            pdf.cell(0, 7, text, new_x="LMARGIN", new_y="NEXT")
+            _pdf_toc_entry(pdf, text, pg, indent=20)
 
 
 def _render_blocks_to_pdf(pdf, blocks, image_counter=1):
@@ -677,6 +739,21 @@ def _render_blocks_to_pdf(pdf, blocks, image_counter=1):
     return image_counter
 
 
+def _build_content_pdf(pdf, blocks, headings):
+    """Render content and track page numbers for each heading."""
+    page_map = {}
+    heading_idx = 0
+
+    for block in blocks:
+        if block["type"] == "heading" and heading_idx < len(headings):
+            # Record page number for this heading (relative to content start)
+            if block["text"] == headings[heading_idx]["text"]:
+                page_map[heading_idx] = pdf.page_no() - pdf._content_start_page + 1
+                heading_idx += 1
+
+    return page_map
+
+
 def save_as_pdf(content, title, output_path, title_en="", lecturer="",
                  author="", nim="", program_studi="", fakultas="",
                  universitas="", year="", logo_path=""):
@@ -684,27 +761,71 @@ def save_as_pdf(content, title, output_path, title_en="", lecturer="",
     if not year:
         year = str(datetime.now().year)
 
-    pdf = MakalahPDF()
-
-    # 1. Cover page (no page number)
-    _build_cover_pdf(pdf, title=title, title_en=title_en, lecturer=lecturer,
-                      author=author, nim=nim, program_studi=program_studi,
-                      fakultas=fakultas, universitas=universitas,
-                      year=year, logo_path=logo_path)
-
-    # 2. Kata Pengantar
-    _build_kata_pengantar_pdf(pdf, title=title, author=author, year=year)
-
-    # 3. Daftar Isi
     blocks = _parse_markdown_to_blocks(content)
     headings = _extract_headings(blocks)
-    _build_daftar_isi_pdf(pdf, headings)
 
-    # Mark where content starts for page numbering
+    cover_kwargs = dict(title=title, title_en=title_en, lecturer=lecturer,
+                        author=author, nim=nim, program_studi=program_studi,
+                        fakultas=fakultas, universitas=universitas,
+                        year=year, logo_path=logo_path)
+
+    # Pass 1: render to find page numbers for headings
+    pdf1 = MakalahPDF()
+    _build_cover_pdf(pdf1, **cover_kwargs)
+    _build_kata_pengantar_pdf(pdf1, title=title, author=author, year=year)
+    _build_daftar_isi_pdf(pdf1, headings)  # placeholder TOC
+    pdf1._content_start_page = pdf1.page_no() + 1
+    pdf1._page_number_style = "arabic"
+    _render_blocks_to_pdf(pdf1, blocks)
+
+    # Collect actual page numbers
+    page_map = {}
+    heading_idx = 0
+    # Re-render just to track pages accurately
+    pdf_track = MakalahPDF()
+    _build_cover_pdf(pdf_track, **cover_kwargs)
+    _build_kata_pengantar_pdf(pdf_track, title=title, author=author, year=year)
+    _build_daftar_isi_pdf(pdf_track, headings)
+    pdf_track._content_start_page = pdf_track.page_no() + 1
+    pdf_track._page_number_style = "arabic"
+
+    # Track which page each heading lands on
+    for block in blocks:
+        if block["type"] == "heading":
+            level = block["level"]
+            text = block["text"]
+
+            if level == 1:
+                pdf_track.add_page()
+                if heading_idx < len(headings):
+                    page_map[heading_idx] = pdf_track.page_no() - pdf_track._content_start_page + 1
+                    heading_idx += 1
+                pdf_track._set_font_safe("Times", "B", 14)
+                pdf_track.cell(0, 8, "X", align="C", new_x="LMARGIN", new_y="NEXT")
+            else:
+                if heading_idx < len(headings):
+                    page_map[heading_idx] = pdf_track.page_no() - pdf_track._content_start_page + 1
+                    heading_idx += 1
+                pdf_track._set_font_safe("Times", "B", 12)
+                pdf_track.multi_cell(0, 7, text, new_x="LMARGIN", new_y="NEXT")
+
+        elif block["type"] == "paragraph":
+            pdf_track._set_font_safe("Times", "", 12)
+            pdf_track.set_x(pdf_track.l_margin + 12.5)
+            pdf_track.multi_cell(0, 7, block["text"], align="J", new_x="LMARGIN", new_y="NEXT")
+            pdf_track.ln(3)
+        elif block["type"] in ("list_item", "numbered_item"):
+            pdf_track._set_font_safe("Times", "", 12)
+            pdf_track.set_x(pdf_track.l_margin + 10)
+            pdf_track.multi_cell(0, 7, f"- {block['text']}", new_x="LMARGIN", new_y="NEXT")
+
+    # Pass 2: final render with accurate TOC
+    pdf = MakalahPDF()
+    _build_cover_pdf(pdf, **cover_kwargs)
+    _build_kata_pengantar_pdf(pdf, title=title, author=author, year=year)
+    _build_daftar_isi_pdf(pdf, headings, page_map=page_map)
     pdf._content_start_page = pdf.page_no() + 1
     pdf._page_number_style = "arabic"
-
-    # 4. Content
     _render_blocks_to_pdf(pdf, blocks)
 
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
