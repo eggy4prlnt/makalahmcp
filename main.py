@@ -139,6 +139,9 @@ Gunakan referensi berikut sebagai sumber:
 - Elaborasi setiap poin dengan penjelasan, contoh, dan analisis mendalam
 
 ### Struktur (gunakan heading markdown #)
+PENTING: Kata Pengantar dan Daftar Isi TIDAK perlu ditulis dalam konten markdown.
+Keduanya akan di-generate OTOMATIS oleh sistem saat konversi ke DOCX/PDF.
+Mulai langsung dari Abstrak.
 # I. Abstrak
 (Dalam Bahasa Indonesia DAN Bahasa Inggris, masing-masing 150-250 kata)
 
