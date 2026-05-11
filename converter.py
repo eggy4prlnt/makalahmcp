@@ -298,14 +298,13 @@ def _toc_entry(doc, text, page_str, indent_cm=0, bold=False, bookmark=None):
         run2.font.name = "Times New Roman"; run2.font.size = Pt(12)
 
 
-def _toc_label(doc, text, bold=True):
-    """BAB heading line in TOC — no dots, no page number."""
+def _toc_label(doc, text):
+    """BAB heading line in TOC — no dots, no page number, not bold."""
     p = doc.add_paragraph()
     p.paragraph_format.line_spacing = 1.5
     p.paragraph_format.space_after = Pt(0)
     p.paragraph_format.space_before = Pt(0)
     run = p.add_run(text)
-    run.bold = bold
     run.font.name = "Times New Roman"
     run.font.size = Pt(12)
 
@@ -552,35 +551,33 @@ def _pdf_kata_pengantar(pdf, title, author="", nim="", year=""):
 
 
 # --- PDF Daftar Isi ---
-def _pdf_toc_entry(pdf, text, page_str, indent=0, bold=False, link=None):
-    style = "B" if bold else ""
-    pdf._font(style, 12)
+def _pdf_toc_entry(pdf, text, page_str, indent=0, link=None):
+    pdf._font("", 12)
     x0 = pdf.l_margin + indent
     pdf.set_x(x0)
     tw = pdf.get_string_width(text + " ")
     pw = pdf.get_string_width(" " + page_str)
     avail = pdf.w - pdf.r_margin - x0
 
-    # Build dot string that fills the space
-    dot_unit = ".  "  # dot + 2 spaces for proper spacing like the example
-    duw = pdf.get_string_width(dot_unit) if pdf.get_string_width(dot_unit) > 0 else 1
+    # Build continuous dots like the example: "........."
+    dw = pdf.get_string_width(".")
     ds = avail - tw - pw
-    num_dots = max(0, int(ds / duw))
-    dot_str = dot_unit * num_dots
+    num_dots = max(0, int(ds / dw)) if dw > 0 else 0
+    dot_str = "." * num_dots
 
     y0 = pdf.get_y(); x0_abs = pdf.get_x()
     pdf.cell(tw, 7, text + " ")
     pdf._font("", 12)
     remaining = avail - tw - pw
-    pdf.cell(remaining, 7, dot_str)
+    pdf.cell(remaining, 7, dot_str, align="R")
     pdf.cell(pw, 7, " " + page_str, new_x="LMARGIN", new_y="NEXT")
     if link is not None:
         pdf.link(x0_abs, y0, avail, 7, link)
 
 
 def _pdf_toc_label(pdf, text):
-    """BAB line in TOC — bold, no dots, no page number."""
-    pdf._font("B", 12)
+    """BAB line in TOC — no dots, no page number, not bold."""
+    pdf._font("", 12)
     pdf.cell(0, 7, text, new_x="LMARGIN", new_y="NEXT")
 
 
