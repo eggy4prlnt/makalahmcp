@@ -4,12 +4,28 @@ from datetime import datetime
 
 from mcp.server.fastmcp import FastMCP
 
-from scraper import research_topic as do_research
+from scraper import research_topic as do_research, search_university_logo as do_search_logo
 from converter import save_as_docx, save_as_pdf
 
 mcp = FastMCP(
     "MakalahMCP",
-    instructions="MCP server for generating Indonesian academic papers (makalah)",
+    instructions="""MCP server for generating Indonesian academic papers (makalah).
+
+FLOW WAJIB saat user minta buat makalah:
+1. Tanyakan JUDUL makalah (jika belum ada)
+2. Tanyakan data penulis (satu per satu atau sekaligus):
+   - Nama lengkap (wajib)
+   - NIM (wajib)
+   - Universitas (wajib)
+   - Program Studi (wajib)
+   - Fakultas (wajib)
+   - Dosen Pengampu (opsional, boleh dikosongkan)
+3. Cari logo universitas dengan tool search_logo
+4. Tahun OTOMATIS pakai tahun sekarang, JANGAN tanya ke user
+5. Lakukan research_topic dengan judul
+6. Generate konten makalah menggunakan prompt generate_makalah
+7. Simpan dengan save_makalah (format "both" untuk DOCX + PDF)
+""",
 )
 
 
@@ -32,6 +48,23 @@ async def research_topic(title: str, num_results: int = 5) -> str:
         The URL field is important for bibliography entries.
     """
     result = await do_research(title, num_results)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def search_logo(university_name: str) -> str:
+    """Search and download a university logo image for the makalah cover page.
+
+    Searches the web for the university logo, downloads it, and returns the local file path.
+    Call this after getting the university name from the user.
+
+    Args:
+        university_name: The full name of the university (e.g. "Universitas Jambi").
+
+    Returns:
+        JSON string with found status and local file path of the downloaded logo.
+    """
+    result = await do_search_logo(university_name)
     return json.dumps(result, ensure_ascii=False, indent=2)
 
 
@@ -68,8 +101,8 @@ async def save_makalah(
         program_studi: Study program name (optional).
         fakultas: Faculty name (optional).
         universitas: University name (optional).
-        year: Year of publication (default: current year).
-        logo_path: Path to institution logo image file (optional).
+        year: Year of publication (default: current year, DO NOT ask user).
+        logo_path: Path to institution logo image file from search_logo tool.
         output_dir: Output directory (default: ~/Documents).
 
     Returns:

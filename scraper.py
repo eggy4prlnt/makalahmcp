@@ -157,3 +157,69 @@ async def research_topic(title: str, num_results: int = 5) -> dict:
             image_idx += len(page["images"])
 
     return {"references": references}
+
+
+async def search_university_logo(university_name: str) -> dict:
+    """Search for a university logo image and download it."""
+    query = f"logo {university_name} png"
+    urls = await web_search(query, 5)
+
+    os.makedirs(IMAGE_DIR, exist_ok=True)
+    logo_path = os.path.join(IMAGE_DIR, "university_logo.png")
+
+    async with httpx.AsyncClient(headers=HEADERS, follow_redirects=True, timeout=15) as client:
+        # Try to find logo from search results
+        for url in urls:
+            try:
+                resp = await client.get(url)
+                resp.raise_for_status()
+                soup = BeautifulSoup(resp.text, "html.parser")
+
+                # Look for logo images
+                for img in soup.find_all("img", src=True):
+                    src = img.get("src", "")
+                    alt = (img.get("alt", "") or "").lower()
+                    # Match images that likely are logos
+                    if any(k in alt or k in src.lower() for k in ["logo", "lambang", "emblem", university_name.lower().split()[0]]):
+                        if src.startswith("data:"):
+                            continue
+                        img_url = urljoin(url, src)
+                        try:
+                            img_resp = await client.get(img_url, timeout=10)
+                            img_resp.raise_for_status()
+                            ct = img_resp.headers.get("content-type", "")
+                            if "image" in ct and len(img_resp.content) > 2000:
+                                with open(logo_path, "wb") as f:
+                                    f.write(img_resp.content)
+                                return {"found": True, "path": logo_path, "source_url": img_url}
+                        except Exception:
+                            continue
+            except Exception:
+                continue
+
+        # Fallback: try direct image search via DuckDuckGo
+        # Search for common university logo URL patterns
+        for url in urls:
+            try:
+                resp = await client.get(url)
+                resp.raise_for_status()
+                soup = BeautifulSoup(resp.text, "html.parser")
+                for img in soup.find_all("img", src=True):
+                    src = img.get("src", "")
+                    if src.startswith("data:"):
+                        continue
+                    img_url = urljoin(url, src)
+                    try:
+                        img_resp = await client.get(img_url, timeout=10)
+                        img_resp.raise_for_status()
+                        ct = img_resp.headers.get("content-type", "")
+                        if "image" in ct and len(img_resp.content) > 5000:
+                            with open(logo_path, "wb") as f:
+                                f.write(img_resp.content)
+                            return {"found": True, "path": logo_path, "source_url": img_url}
+                    except Exception:
+                        continue
+            except Exception:
+                continue
+
+    return {"found": False, "path": "", "error": f"Logo untuk {university_name} tidak ditemukan."}
