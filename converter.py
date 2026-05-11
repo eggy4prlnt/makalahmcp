@@ -554,33 +554,40 @@ def _pdf_kata_pengantar(pdf, title, author="", nim="", year=""):
 def _pdf_toc_entry(pdf, text, page_str, indent=0, link=None):
     pdf._font("", 12)
     x0 = pdf.l_margin + indent
-    x_right = pdf.w - pdf.r_margin  # right edge for page number
-    pg_w = pdf.get_string_width(page_str) + 2  # page number width + padding
+    x_right = pdf.w - pdf.r_margin
+    pg_w = pdf.get_string_width(page_str)
+    # Page number right-aligned: its right edge touches x_right
+    pg_x = x_right - pg_w
 
     y0 = pdf.get_y()
-
-    # Calculate available width for text + dots
-    text_max_w = x_right - x0 - pg_w - 2
     tw = pdf.get_string_width(text)
 
-    if tw > text_max_w:
-        # Text too long — truncate with ...
-        while pdf.get_string_width(text + "...") > text_max_w and len(text) > 10:
+    # Truncate if text too long
+    max_text_x = pg_x - 5  # leave at least 5mm for dots
+    if x0 + tw > max_text_x:
+        while pdf.get_string_width(text + "...") > (max_text_x - x0) and len(text) > 10:
             text = text[:-1]
         text = text.rstrip() + "..."
         tw = pdf.get_string_width(text)
 
-    # Build dots to fill remaining space
+    # Dots fill from end of text to just before page number
+    dots_start_x = x0 + tw + 1
+    dots_end_x = pg_x - 1
     dw = pdf.get_string_width(".")
-    dot_space = text_max_w - tw
-    num_dots = max(0, int(dot_space / dw)) if dw > 0 else 0
-    dot_str = "." * num_dots
+    dots_space = dots_end_x - dots_start_x
+    num_dots = max(0, int(dots_space / dw)) if dw > 0 else 0
 
-    # Render: text, dots, then page number at fixed right position
+    # Render text
     pdf.set_x(x0)
-    pdf.cell(tw + 1, 7, text)
-    pdf.cell(dot_space, 7, dot_str)
-    pdf.cell(pg_w, 7, page_str, align="R", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(tw, 7, text)
+
+    # Render dots at exact position
+    pdf.set_x(dots_start_x)
+    pdf.cell(dots_space, 7, "." * num_dots)
+
+    # Render page number at exact right-aligned position
+    pdf.set_x(pg_x)
+    pdf.cell(pg_w, 7, page_str, new_x="LMARGIN", new_y="NEXT")
 
     if link is not None:
         pdf.link(x0, y0, x_right - x0, 7, link)
