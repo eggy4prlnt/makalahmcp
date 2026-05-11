@@ -300,3 +300,186 @@ def save_as_docx(
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
     doc.save(output_path)
     return output_path
+
+
+from fpdf import FPDF
+
+
+class MakalahPDF(FPDF):
+    """Custom PDF class for makalah formatting."""
+
+    def __init__(self):
+        super().__init__(orientation="P", unit="mm", format="A4")
+        self.set_margins(35, 30, 30)
+        self.set_auto_page_break(auto=True, margin=30)
+
+    def _set_font_safe(self, family: str = "Times", style: str = "", size: int = 12):
+        """Set font with fallback."""
+        try:
+            self.set_font(family, style, size)
+        except Exception:
+            self.set_font("Times", style, size)
+
+
+def _build_cover_pdf(
+    pdf: MakalahPDF,
+    title: str,
+    title_en: str = "",
+    lecturer: str = "",
+    author: str = "",
+    nim: str = "",
+    program_studi: str = "",
+    fakultas: str = "",
+    universitas: str = "",
+    year: str = "",
+    logo_path: str = "",
+) -> None:
+    """Add cover page to PDF."""
+    pdf.add_page()
+    pdf.ln(20)
+
+    # Title - uppercase, bold, 14pt
+    pdf._set_font_safe("Times", "B", 14)
+    pdf.multi_cell(0, 8, title.upper(), align="C")
+    pdf.ln(3)
+
+    # English title - italic
+    if title_en:
+        pdf._set_font_safe("Times", "I", 14)
+        pdf.multi_cell(0, 8, title_en, align="C")
+    pdf.ln(3)
+
+    # Lecturer
+    if lecturer:
+        pdf._set_font_safe("Times", "", 12)
+        pdf.multi_cell(0, 7, f"Dosen Pengampu : {lecturer}", align="C")
+    pdf.ln(10)
+
+    # Logo
+    if logo_path and os.path.exists(logo_path):
+        page_w = pdf.w - pdf.l_margin - pdf.r_margin
+        img_w = 40
+        x = pdf.l_margin + (page_w - img_w) / 2
+        pdf.image(logo_path, x=x, w=img_w)
+        pdf.ln(10)
+
+    pdf.ln(10)
+
+    # "Disusun Oleh:"
+    pdf._set_font_safe("Times", "", 12)
+    pdf.cell(0, 7, "Disusun Oleh:", align="C", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(3)
+
+    # Author
+    if author:
+        pdf._set_font_safe("Times", "B", 12)
+        pdf.cell(0, 7, author.upper(), align="C", new_x="LMARGIN", new_y="NEXT")
+
+    # NIM
+    if nim:
+        pdf._set_font_safe("Times", "", 12)
+        pdf.cell(0, 7, f"NIM: {nim}", align="C", new_x="LMARGIN", new_y="NEXT")
+
+    pdf.ln(20)
+
+    # Program Studi
+    if program_studi:
+        pdf._set_font_safe("Times", "B", 12)
+        pdf.cell(0, 7, program_studi.upper(), align="C", new_x="LMARGIN", new_y="NEXT")
+
+    # Fakultas
+    if fakultas:
+        pdf._set_font_safe("Times", "B", 12)
+        pdf.cell(0, 7, fakultas.upper(), align="C", new_x="LMARGIN", new_y="NEXT")
+
+    # Universitas
+    if universitas:
+        pdf._set_font_safe("Times", "B", 12)
+        pdf.cell(0, 7, universitas.upper(), align="C", new_x="LMARGIN", new_y="NEXT")
+
+    # Year
+    if year:
+        pdf._set_font_safe("Times", "", 12)
+        pdf.ln(5)
+        pdf.cell(0, 7, year, align="C", new_x="LMARGIN", new_y="NEXT")
+
+
+def _render_blocks_to_pdf(pdf: MakalahPDF, blocks: list[dict], image_counter: int = 1) -> int:
+    """Render parsed markdown blocks into PDF. Returns updated image counter."""
+    for block in blocks:
+        if block["type"] == "heading":
+            level = block["level"]
+            size = 14 if level == 1 else 12
+            pdf._set_font_safe("Times", "B", size)
+            pdf.ln(5)
+            pdf.multi_cell(0, 8, block["text"])
+            pdf.ln(3)
+
+        elif block["type"] == "paragraph":
+            pdf._set_font_safe("Times", "", 12)
+            pdf.multi_cell(0, 7, block["text"])
+            pdf.ln(3)
+
+        elif block["type"] == "image":
+            path = block["path"]
+            if os.path.exists(path):
+                page_w = pdf.w - pdf.l_margin - pdf.r_margin
+                img_w = min(120, page_w)
+                x = pdf.l_margin + (page_w - img_w) / 2
+                pdf.image(path, x=x, w=img_w)
+                pdf.ln(3)
+
+                caption = block["caption"] or f"Gambar {image_counter}"
+                pdf._set_font_safe("Times", "I", 10)
+                pdf.cell(0, 6, f"Gambar {image_counter}: {caption}", align="C", new_x="LMARGIN", new_y="NEXT")
+                pdf.ln(3)
+                image_counter += 1
+
+        elif block["type"] == "list_item":
+            pdf._set_font_safe("Times", "", 12)
+            x = pdf.get_x()
+            pdf.cell(5, 7, chr(8226))  # bullet
+            pdf.multi_cell(0, 7, block["text"])
+
+    return image_counter
+
+
+def save_as_pdf(
+    content: str,
+    title: str,
+    output_path: str,
+    title_en: str = "",
+    lecturer: str = "",
+    author: str = "",
+    nim: str = "",
+    program_studi: str = "",
+    fakultas: str = "",
+    universitas: str = "",
+    year: str = "",
+    logo_path: str = "",
+) -> str:
+    """Convert markdown content to a styled PDF file. Returns the file path."""
+    pdf = MakalahPDF()
+
+    _build_cover_pdf(
+        pdf,
+        title=title,
+        title_en=title_en,
+        lecturer=lecturer,
+        author=author,
+        nim=nim,
+        program_studi=program_studi,
+        fakultas=fakultas,
+        universitas=universitas,
+        year=year or str(datetime.now().year),
+        logo_path=logo_path,
+    )
+
+    # Content pages
+    pdf.add_page()
+    blocks = _parse_markdown_to_blocks(content)
+    _render_blocks_to_pdf(pdf, blocks)
+
+    os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
+    pdf.output(output_path)
+    return output_path
