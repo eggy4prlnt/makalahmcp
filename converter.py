@@ -322,7 +322,7 @@ def _add_daftar_isi(doc, headings):
     _toc_entry(doc, "KATA PENGANTAR", "ii", bookmark="_bm_kata_pengantar")
     _toc_entry(doc, "DAFTAR ISI", "iii")
 
-    # Content: BAB headings are labels (no dots), sub-headings have dots + page
+    # Content headings
     current_page = 1
     for h in headings:
         text = h["text"]
@@ -332,16 +332,19 @@ def _add_daftar_isi(doc, headings):
         if level == 1:
             bab_match = re.match(r"^([IVX]+)\.\s*(.*)", text)
             if bab_match:
+                # BAB heading — label only, no dots, no page number
                 label = f"BAB {bab_match.group(1)} {bab_match.group(2).upper()}"
+                _toc_label(doc, label)
+                current_page += 2
             else:
-                label = text.upper()
-            _toc_label(doc, label)
-            current_page += 2
+                # Non-BAB h1 (like "Daftar Pustaka", "Kesimpulan") — with dots + page
+                _toc_entry(doc, text.upper(), str(current_page), bookmark=bm)
+                current_page += 1
         elif level == 2:
             _toc_entry(doc, text, str(current_page), indent_cm=1.0, bookmark=bm)
             current_page += 1
         else:
-            _toc_entry(doc, text, str(current_page), indent_cm=2.0, bookmark=bm)
+            _toc_entry(doc, text, str(current_page), indent_cm=2.5, bookmark=bm)
 
     doc.add_page_break()
 
@@ -554,17 +557,23 @@ def _pdf_toc_entry(pdf, text, page_str, indent=0, bold=False, link=None):
     pdf._font(style, 12)
     x0 = pdf.l_margin + indent
     pdf.set_x(x0)
-    tw = pdf.get_string_width(text)
-    pw = pdf.get_string_width(page_str)
-    dw = pdf.get_string_width(".")
+    tw = pdf.get_string_width(text + " ")
+    pw = pdf.get_string_width(" " + page_str)
     avail = pdf.w - pdf.r_margin - x0
-    ds = avail - tw - pw - 4
-    dots = " " + "." * max(0, int(ds / dw)) + " " if ds > 0 and dw > 0 else " "
+
+    # Build dot string that fills the space
+    dot_unit = ".  "  # dot + 2 spaces for proper spacing like the example
+    duw = pdf.get_string_width(dot_unit) if pdf.get_string_width(dot_unit) > 0 else 1
+    ds = avail - tw - pw
+    num_dots = max(0, int(ds / duw))
+    dot_str = dot_unit * num_dots
+
     y0 = pdf.get_y(); x0_abs = pdf.get_x()
-    pdf.cell(tw, 7, text)
+    pdf.cell(tw, 7, text + " ")
     pdf._font("", 12)
-    pdf.cell(ds + 4, 7, dots, align="C")
-    pdf.cell(pw, 7, page_str, new_x="LMARGIN", new_y="NEXT")
+    remaining = avail - tw - pw
+    pdf.cell(remaining, 7, dot_str)
+    pdf.cell(pw, 7, " " + page_str, new_x="LMARGIN", new_y="NEXT")
     if link is not None:
         pdf.link(x0_abs, y0, avail, 7, link)
 
@@ -594,14 +603,20 @@ def _pdf_daftar_isi(pdf, headings, page_map=None, link_map=None):
 
         if level == 1:
             bab_match = re.match(r"^([IVX]+)\.\s*(.*)", text)
-            label = f"BAB {bab_match.group(1)} {bab_match.group(2).upper()}" if bab_match else text.upper()
-            _pdf_toc_label(pdf, label)
-            est += 2
+            if bab_match:
+                # BAB heading — label only, no dots
+                label = f"BAB {bab_match.group(1)} {bab_match.group(2).upper()}"
+                _pdf_toc_label(pdf, label)
+                est += 2
+            else:
+                # Non-BAB h1 (Daftar Pustaka, Kesimpulan) — with dots
+                _pdf_toc_entry(pdf, text.upper(), pg, link=lnk)
+                est += 1
         elif level == 2:
             _pdf_toc_entry(pdf, text, pg, indent=10, link=lnk)
             est += 1
         else:
-            _pdf_toc_entry(pdf, text, pg, indent=20, link=lnk)
+            _pdf_toc_entry(pdf, text, pg, indent=25, link=lnk)
 
 
 # --- PDF Content ---
