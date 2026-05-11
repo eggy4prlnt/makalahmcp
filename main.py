@@ -261,9 +261,16 @@ PENTING: SETIAP BAB WAJIB memiliki minimal 2 sub-heading (##). JANGAN pernah men
 - Tetap pertahankan makna dan akurasi informasi
 - Setiap klaim dari referensi harus disertai kutipan
 
-### Gambar
-- Jika ada gambar dari referensi, sisipkan dengan format: ![keterangan gambar](path_file)
-- Beri keterangan yang relevan pada setiap gambar
+### Gambar — WAJIB ADA GAMBAR
+- SETIAP makalah WAJIB menyertakan gambar yang relevan dengan topik
+- Gambar dari hasil research (yang sudah di-download oleh research_topic) WAJIB dimasukkan
+- Lihat field "images" di setiap referensi dari research_topic — sisipkan semua gambar yang ada
+- Format: ![Keterangan gambar yang jelas dan deskriptif](local_path_dari_images)
+- Contoh: ![Gambar 1: Arsitektur sistem dashboard interaktif](/tmp/makalahmcp/images/img_001.png)
+- Letakkan gambar di bagian yang relevan (BAB Hasil atau BAB Pembahasan)
+- Setiap gambar HARUS memiliki keterangan yang menjelaskan isi gambar
+- Penomoran gambar menggunakan angka arab: Gambar 1, Gambar 2, dst.
+- Sumber gambar harus dicantumkan jika berasal dari referensi
 
 ### Bahasa — FULL BAHASA INDONESIA
 - SELURUH makalah WAJIB ditulis dalam Bahasa Indonesia yang baku dan formal
