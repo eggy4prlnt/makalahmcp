@@ -164,23 +164,31 @@ Gunakan referensi berikut sebagai sumber:
 
 ## ATURAN PENTING
 
-### Panjang Konten — INI SANGAT PENTING
-- Makalah harus SANGAT PANJANG dan SANGAT DETAIL. Target minimal 5000-8000 kata.
-- Setiap sub-bab harus memiliki minimal 4-6 paragraf PANJANG
-- Setiap paragraf harus 5-8 kalimat, bukan 1-2 kalimat
-- JANGAN pernah menulis paragraf pendek. Setiap paragraf harus penuh penjelasan.
-- Elaborasi setiap poin dengan: definisi, penjelasan mendalam, contoh konkret, data/angka, dampak/implikasi, dan hubungan dengan teori
-- Gunakan banyak referensi dan kutipan dalam setiap bab
-- Tulis seolah-olah ini adalah makalah untuk tugas akhir kuliah yang sangat penting
+### Panjang Konten — INI ATURAN PALING PENTING, TIDAK BOLEH DILANGGAR
+- Target MINIMAL 6000-10000 kata. Makalah yang kurang dari 5000 kata TIDAK DITERIMA.
+- Setiap sub-bab (##) harus memiliki MINIMAL 3-5 paragraf PANJANG
+- Setiap paragraf WAJIB terdiri dari MINIMAL 5-8 kalimat panjang
+- DILARANG KERAS menulis paragraf yang hanya 1-3 kalimat
+- Setiap sub-bab harus MINIMAL 300-500 kata
+- Elaborasi setiap poin dengan: definisi lengkap, penjelasan mendalam, contoh konkret, data/angka spesifik, dampak/implikasi, hubungan dengan teori, dan perbandingan dengan penelitian terdahulu
+- Gunakan BANYAK referensi dan kutipan dalam SETIAP paragraf, bukan hanya di akhir sub-bab
+- Tulis seolah-olah ini adalah makalah untuk tugas akhir kuliah yang nilainya menentukan kelulusan
 
-### Cara Menulis Pembahasan yang Detail
-Contoh BURUK (terlalu singkat):
-"Dashboard interaktif terbukti efektif dalam menyajikan data operasional."
+### Aturan Per Sub-bab — SETIAP sub-bab WAJIB mengikuti pola ini:
+1. Paragraf pembuka: jelaskan konteks dan relevansi topik sub-bab (5-8 kalimat)
+2. Paragraf inti 1: jelaskan konsep/temuan utama dengan detail, kutip referensi (5-8 kalimat)
+3. Paragraf inti 2: berikan contoh konkret, data spesifik, atau perbandingan (5-8 kalimat)
+4. Paragraf inti 3: hubungkan dengan teori atau penelitian terdahulu, kutip referensi (5-8 kalimat)
+5. Paragraf penutup: simpulkan dan transisi ke sub-bab berikutnya (3-5 kalimat)
 
-Contoh BAIK (detail dan mendalam):
-"Penerapan dashboard interaktif dalam konteks operasional teknologi informasi telah menunjukkan efektivitas yang sangat signifikan dalam menyajikan data operasional secara komprehensif. Berdasarkan hasil analisis yang telah dilakukan, dashboard yang dibangun menggunakan Power BI mampu mengintegrasikan berbagai sumber data seperti log server, tiket helpdesk, dan laporan performa jaringan ke dalam satu tampilan visual yang koheren dan mudah dipahami oleh berbagai tingkatan pemangku kepentingan. Kemampuan drill-down yang disediakan oleh dashboard memungkinkan pengguna untuk menelusuri data dari tingkat agregat hingga tingkat detail yang paling granular, sehingga analisis root cause terhadap permasalahan operasional dapat dilakukan dengan lebih cepat dan akurat. Hal ini sejalan dengan temuan penelitian sebelumnya yang menunjukkan bahwa visualisasi data interaktif mampu meningkatkan kecepatan pengambilan keputusan hingga 5 kali lipat dibandingkan metode pelaporan konvensional berbasis spreadsheet (Silvianingsih 2024)."
+### Contoh Penulisan
+Contoh BURUK (DILARANG — terlalu singkat, hanya 1-2 kalimat):
+"Dominasi masalah jaringan sebesar 35 persen memberikan informasi strategis bagi manajemen."
 
-Tulis SEMUA paragraf dengan level detail seperti contoh BAIK di atas.
+Contoh BAIK (WAJIB — detail, panjang, banyak kutipan):
+"Dominasi masalah jaringan sebesar 35 persen dari total tiket layanan bantuan merupakan temuan yang sangat signifikan dan memerlukan perhatian khusus dari pihak manajemen organisasi. Angka ini menunjukkan bahwa lebih dari sepertiga seluruh permasalahan TI yang dilaporkan oleh pengguna berkaitan dengan konektivitas dan infrastruktur jaringan, yang mencakup permasalahan seperti putusnya koneksi internet, lambatnya kecepatan akses, gangguan pada perangkat jaringan, serta masalah konfigurasi yang menyebabkan ketidakstabilan layanan. Temuan ini sejalan dengan hasil penelitian Silvianingsih (2024) yang juga mengidentifikasi bahwa permasalahan infrastruktur jaringan merupakan kategori dominan dalam data operasional perusahaan penyedia layanan internet di Indonesia. Berdasarkan kerangka kerja ITIL yang dikembangkan oleh Axelos (2019), organisasi perlu melakukan analisis akar masalah secara sistematis terhadap kategori permasalahan yang paling dominan untuk mengidentifikasi faktor-faktor penyebab utama dan merancang tindakan perbaikan yang efektif. Implikasi praktis dari temuan ini adalah bahwa manajemen perlu mengalokasikan proporsi anggaran yang lebih besar untuk pemeliharaan dan peningkatan infrastruktur jaringan, termasuk investasi dalam perangkat jaringan yang lebih handal, peningkatan kapasitas bandwidth, serta pelatihan berkala bagi tim teknis yang menangani permasalahan jaringan. Selain itu, organisasi juga perlu mempertimbangkan implementasi sistem pemantauan jaringan secara waktu nyata yang dapat mendeteksi potensi gangguan sebelum berdampak pada pengguna akhir, sebagaimana direkomendasikan oleh Turban dkk. (2018) dalam konteks penerapan inteligensi bisnis untuk operasional TI."
+
+Tulis SEMUA paragraf dengan level detail dan panjang seperti contoh BAIK di atas. JANGAN PERNAH menulis paragraf pendek.
 
 ### Struktur (gunakan heading markdown #)
 PENTING: Kata Pengantar dan Daftar Isi TIDAK perlu ditulis dalam konten markdown.
