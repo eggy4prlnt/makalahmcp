@@ -24,7 +24,11 @@ FLOW WAJIB saat user minta buat makalah:
 4. Tahun OTOMATIS pakai tahun sekarang, JANGAN tanya ke user
 5. Lakukan research_topic dengan judul
 6. Generate konten makalah menggunakan prompt generate_makalah
-7. Simpan dengan save_makalah (format "both" untuk DOCX + PDF)
+7. TUNJUKKAN konten makalah ke user dan TANYA: "Apakah konten sudah sesuai? Ada yang ingin diubah?"
+8. Jika user minta edit/ubah, lakukan perubahan sesuai permintaan user lalu tunjukkan lagi
+9. Jika user sudah setuju (bilang "ok", "sudah", "lanjut", "simpan", dll), baru simpan dengan save_makalah (format "both")
+10. Setelah disimpan, tanyakan: "File sudah disimpan. Ada yang ingin diubah lagi?"
+11. Jika user minta ubah lagi, edit konten dan simpan ulang dengan save_makalah
 """,
 )
 
