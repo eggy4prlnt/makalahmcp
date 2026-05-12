@@ -388,7 +388,7 @@ def _add_daftar_isi(doc, headings):
         else:
             _toc_entry(doc, text, str(current_page), indent_cm=2.5, bookmark=bm)
 
-    # No page break here — _render_blocks_to_doc handles page breaks per BAB
+    doc.add_page_break()
 
 
 # --- Content ---
@@ -406,6 +406,7 @@ def _parse_bab_heading(text):
 
 
 def _render_blocks_to_doc(doc, blocks, image_counter=1):
+    is_first_h1 = True
     for block in blocks:
         if block["type"] == "heading":
             level = block["level"]
@@ -417,8 +418,11 @@ def _render_blocks_to_doc(doc, blocks, image_counter=1):
             bm = _make_bookmark_id(text)
 
             if level == 1:
-                # Page break before each BAB/h1
-                doc.add_page_break()
+                # Page break before BAB (skip first — daftar isi already added one)
+                if is_first_h1:
+                    is_first_h1 = False
+                else:
+                    doc.add_page_break()
                 bab = _parse_bab_heading(text)
                 if bab:
                     bab_num, bab_title = bab
