@@ -249,17 +249,39 @@ ATURAN HEADING:
 - Kutipan langsung dengan halaman: (Wiegand and Gouws 2013: 273)
 
 ### Format Daftar Pustaka — HARUS BANYAK (minimal 8-15 referensi) dan SEMUA WAJIB ADA URL
-- Urutkan alfabetis
-- SETIAP referensi WAJIB menyertakan URL lengkap yang bisa diakses, TANPA KECUALI
-- Untuk buku: cari URL Google Books, perpustakaan online, atau toko buku online
-- Untuk jurnal: cari URL dari portal jurnal (Google Scholar, Garuda, Sinta, ResearchGate, dll)
-- Format: Nama, Inisial. Tahun. "Judul". Penerbit/Jurnal. URL. Diakses pada tanggal.
-- Contoh: Sugiyono. 2019. "Metode Penelitian Kuantitatif, Kualitatif, dan R&D". Bandung: Alfabeta. https://opac.perpusnas.go.id/DetailOpac.aspx?id=1133109. Diakses pada 11 Mei 2026.
-- Contoh jurnal: Wibowo, A. 2020. "Analisis Deskriptif Data Operasional TI". Jurnal Teknologi Informasi, 12(3), 45-58. https://jurnal.example.ac.id/index.php/jti/article/view/123. Diakses pada 11 Mei 2026.
-- SEMUA referensi dari research WAJIB masuk daftar pustaka dengan URL asli-nya
-- TAMBAHKAN juga referensi pendukung (minimal 5 tambahan) dari buku/jurnal yang relevan. Gunakan referensi NYATA dan kredibel. Setiap referensi tambahan HARUS punya URL yang masuk akal (Google Books, portal jurnal, repositori universitas, dll).
-- Setiap referensi di daftar pustaka HARUS dikutip minimal 1 kali di dalam teks makalah
-- JANGAN buat referensi fiktif. Gunakan nama penulis dan judul yang umum di bidangnya
+
+ATURAN DAFTAR PUSTAKA YANG TIDAK BOLEH DILANGGAR:
+1. Urutkan alfabetis
+2. SETIAP referensi WAJIB diakhiri dengan URL dan "Diakses pada [tanggal]". TIDAK ADA PENGECUALIAN.
+3. Referensi TANPA URL akan DITOLAK oleh sistem.
+
+FORMAT WAJIB setiap entry daftar pustaka (perhatikan URL di akhir):
+```
+Nama, Inisial. Tahun. "Judul". Penerbit/Jurnal. URL. Diakses pada [tanggal].
+```
+
+CONTOH YANG BENAR:
+```
+Sugiyono. 2019. "Metode Penelitian Kuantitatif, Kualitatif, dan R&D". Bandung: Alfabeta. https://opac.perpusnas.go.id/DetailOpac.aspx?id=1133109. Diakses pada 12 Mei 2026.
+Laudon, K. C. dan Laudon, J. P. 2020. "Management Information Systems". New York: Pearson. https://books.google.co.id/books?id=o1yuDwAAQBAJ. Diakses pada 12 Mei 2026.
+Wibowo, A. 2020. "Analisis Deskriptif Data Operasional TI". Jurnal Teknologi Informasi, 12(3), 45-58. https://jurnal.example.ac.id/index.php/jti/article/view/123. Diakses pada 12 Mei 2026.
+```
+
+CONTOH YANG SALAH (JANGAN SEPERTI INI — TIDAK ADA URL):
+```
+Laudon, K. C. dan Laudon, J. P. 2020. Management Information Systems. New York: Pearson.
+```
+
+SUMBER URL:
+- Buku: gunakan https://books.google.co.id/books?id=... atau https://opac.perpusnas.go.id/...
+- Jurnal: gunakan URL portal jurnal (https://jurnal.*.ac.id/..., https://scholar.google.com/..., dll)
+- Website: gunakan URL asli dari research
+
+ATURAN TAMBAHAN:
+- SEMUA referensi dari research WAJIB masuk dengan URL asli-nya
+- TAMBAHKAN minimal 5 referensi pendukung dari buku/jurnal (HARUS punya URL)
+- Setiap referensi HARUS dikutip minimal 1 kali di dalam teks
+- JANGAN buat referensi fiktif
 
 ### Paraphrase
 - JANGAN copy-paste dari referensi, tulis ulang dengan kalimat sendiri

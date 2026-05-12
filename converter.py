@@ -95,6 +95,14 @@ _SKIP_HEADINGS = {"kata pengantar", "daftar isi", "cover"}
 _KATA_PENGANTAR_PATTERNS = [
     "puji syukur", "puji dan syukur", "segala rahmat", "kehadirat tuhan",
     "kehadirat allah", "panjatkan kehadirat", "panjatkan puji",
+    "makalah ini disusun untuk memenuhi", "makalah ini disusun sebagai",
+    "penulis menyadari bahwa makalah ini", "penulis mengucapkan terima kasih",
+    "penulis mengucapkan terimakasih", "kritik dan saran yang membangun",
+    "saran dan kritik yang membangun", "jauh dari sempurna",
+    "kesempurnaan makalah ini", "demi perbaikan di masa",
+    "terima kasih kepada semua pihak", "terimakasih kepada semua pihak",
+    "bantuan dari pihak yang telah", "semoga makalah ini dapat",
+    "makalah ini dapat tersusun", "menyelesaikan makalah",
 ]
 
 _BULAN_ID = {
