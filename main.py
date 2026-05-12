@@ -190,50 +190,51 @@ Contoh BAIK (WAJIB — detail, panjang, banyak kutipan):
 
 Tulis SEMUA paragraf dengan level detail dan panjang seperti contoh BAIK di atas. JANGAN PERNAH menulis paragraf pendek.
 
-### Struktur (gunakan heading markdown #)
-SANGAT PENTING — DILARANG KERAS:
-- JANGAN tulis Kata Pengantar di konten. Kata Pengantar di-generate OTOMATIS oleh sistem.
-- JANGAN tulis Daftar Isi di konten. Daftar Isi di-generate OTOMATIS oleh sistem.
-- JANGAN tulis Cover di konten. Cover di-generate OTOMATIS oleh sistem.
-- Mulai langsung dari # I. Abstrak. JANGAN ada konten apapun sebelum # I. Abstrak.
+### FORMAT MARKDOWN — IKUTI PERSIS, JANGAN DIUBAH
 
+DILARANG KERAS:
+- JANGAN tulis Kata Pengantar, Daftar Isi, atau Cover. Semua itu OTOMATIS oleh sistem.
+- JANGAN tulis apapun sebelum # I. Abstrak
+- JANGAN pakai #### (4 hash atau lebih). HANYA gunakan # (BAB) dan ## (sub-bab) dan ### (sub-sub-bab)
+- JANGAN pakai **bold** atau *italic* di dalam teks. Tulis teks biasa saja tanpa formatting markdown.
+- JANGAN pakai format heading lain selain yang ditentukan di bawah ini
+
+FORMAT HEADING YANG BENAR (COPY PERSIS):
+```
 # I. Abstrak
-(Dalam Bahasa Indonesia DAN Bahasa Inggris, masing-masing 200-300 kata)
-
 # II. Pendahuluan
-## 1.1 Latar Belakang (minimal 5 paragraf panjang, jelaskan konteks luas sampai spesifik)
-## 1.2 Rumusan Masalah (jelaskan dulu konteksnya, baru list pertanyaan)
-## 1.3 Tujuan Penulisan (jelaskan tujuan umum dulu, baru list tujuan khusus)
-## 1.4 Manfaat Penulisan (manfaat teoritis DAN praktis, masing-masing 1 paragraf)
-## 1.5 Tinjauan Pustaka (minimal 4 paragraf, bahas setiap referensi secara mendalam, bandingkan temuan antar referensi)
-
+## 1.1 Latar Belakang
+## 1.2 Rumusan Masalah
+## 1.3 Tujuan Penulisan
+## 1.4 Manfaat Penulisan
+## 1.5 Tinjauan Pustaka
 # III. Metode Penelitian
-WAJIB punya sub-heading ##, contoh:
-## 3.1 Pendekatan Penelitian (minimal 2 paragraf)
-## 3.2 Tahapan Penelitian (minimal 2 paragraf)
-## 3.3 Alat dan Bahan (minimal 2 paragraf)
-## 3.4 Teknik Analisis Data (minimal 2 paragraf)
-
+## 3.1 Pendekatan Penelitian
+## 3.2 Tahapan Penelitian
+## 3.3 Alat dan Bahan
+## 3.4 Teknik Analisis Data
 # IV. Hasil
-WAJIB punya sub-heading ##, buat sub-heading per domain/kategori temuan, contoh:
-## 4.1 Hasil Analisis [domain 1] (minimal 2 paragraf dengan data spesifik, angka, persentase)
-## 4.2 Hasil Analisis [domain 2] (minimal 2 paragraf)
-## 4.3 Hasil Visualisasi Dashboard (minimal 2 paragraf, jelaskan visualisasi yang dihasilkan)
-
+## 4.1 [Judul sub-bab sesuai topik]
+## 4.2 [Judul sub-bab sesuai topik]
+## 4.3 [Judul sub-bab sesuai topik]
 # V. Pembahasan
-WAJIB punya sub-heading ##, buat sub-heading per topik pembahasan, contoh:
-## 5.1 Analisis [temuan 1] (minimal 3 paragraf, hubungkan dengan teori dan referensi)
-## 5.2 Analisis [temuan 2] (minimal 3 paragraf, bandingkan dengan penelitian terdahulu)
-## 5.3 Implikasi Praktis (minimal 2 paragraf)
-## 5.4 Keterbatasan Penelitian (minimal 1 paragraf)
-INI BAGIAN TERPENTING — harus paling panjang dan paling detail.
-
+## 5.1 [Judul sub-bab sesuai topik]
+## 5.2 [Judul sub-bab sesuai topik]
+## 5.3 [Judul sub-bab sesuai topik]
+## 5.4 Implikasi Praktis
+## 5.5 Keterbatasan Penelitian
 # VI. Simpulan
-WAJIB punya sub-heading ##:
-## 6.1 Kesimpulan (minimal 2 paragraf, ringkasan temuan utama)
-## 6.2 Saran (minimal 2 paragraf, saran untuk penelitian selanjutnya dengan detail)
+## 6.1 Kesimpulan
+## 6.2 Saran
+# Daftar Pustaka
+```
 
-PENTING: SETIAP BAB WAJIB memiliki minimal 2 sub-heading (##). JANGAN pernah menulis BAB tanpa sub-heading. Daftar isi akan terlihat kosong jika BAB tidak punya sub-heading.
+ATURAN HEADING:
+- BAB menggunakan # (satu hash) diikuti angka romawi: # I. , # II. , # III. , dst.
+- Sub-bab menggunakan ## (dua hash) diikuti nomor desimal: ## 1.1 , ## 1.2 , ## 3.1 , dst.
+- Sub-sub-bab menggunakan ### (tiga hash) jika diperlukan: ### 3.1.1 , ### 3.1.2 , dst.
+- SETIAP BAB WAJIB punya minimal 2 sub-bab (##)
+- JANGAN pakai heading level 4 atau lebih (####, #####)
 
 # Daftar Pustaka
 
