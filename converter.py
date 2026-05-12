@@ -42,6 +42,9 @@ def _parse_markdown_to_blocks(content: str) -> list[dict]:
             level = min(len(heading_match.group(1)), 3)
             text = heading_match.group(2)
             clean_text = _strip_md_formatting(text)
+            # Force level 1 for BAB headings and Daftar Pustaka regardless of # count
+            if _parse_bab_heading(clean_text) or "daftar pustaka" in clean_text.lower():
+                level = 1
             # Skip front matter headings
             if clean_text.lower().strip() not in _SKIP_HEADINGS:
                 blocks.append({"type": "heading", "level": level, "text": clean_text})
@@ -388,8 +391,6 @@ def _add_daftar_isi(doc, headings):
         else:
             _toc_entry(doc, text, str(current_page), indent_cm=2.5, bookmark=bm)
 
-    doc.add_page_break()
-
 
 # --- Content ---
 def _parse_bab_heading(text):
@@ -406,7 +407,6 @@ def _parse_bab_heading(text):
 
 
 def _render_blocks_to_doc(doc, blocks, image_counter=1):
-    is_first_h1 = True
     for block in blocks:
         if block["type"] == "heading":
             level = block["level"]
@@ -418,11 +418,8 @@ def _render_blocks_to_doc(doc, blocks, image_counter=1):
             bm = _make_bookmark_id(text)
 
             if level == 1:
-                # Page break before BAB (skip first — daftar isi already added one)
-                if is_first_h1:
-                    is_first_h1 = False
-                else:
-                    doc.add_page_break()
+                # ALWAYS page break before every BAB/h1
+                doc.add_page_break()
                 bab = _parse_bab_heading(text)
                 if bab:
                     bab_num, bab_title = bab
