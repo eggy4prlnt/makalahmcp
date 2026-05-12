@@ -29,6 +29,7 @@ def _parse_markdown_to_blocks(content: str) -> list[dict]:
     lines = content.split("\n")
     i = 0
     in_daftar_pustaka = False
+    found_first_heading = False
 
     while i < len(lines):
         line = lines[i].strip()
@@ -40,7 +41,11 @@ def _parse_markdown_to_blocks(content: str) -> list[dict]:
         if heading_match:
             level = min(len(heading_match.group(1)), 3)  # cap at level 3
             text = heading_match.group(2)
-            blocks.append({"type": "heading", "level": level, "text": _strip_md_formatting(text)})
+            clean_text = _strip_md_formatting(text)
+            # Skip headings that are front matter
+            if clean_text.lower().strip() not in _SKIP_HEADINGS:
+                blocks.append({"type": "heading", "level": level, "text": clean_text})
+                found_first_heading = True
             # Detect Daftar Pustaka section
             in_daftar_pustaka = "daftar pustaka" in text.lower()
             i += 1
@@ -73,15 +78,26 @@ def _parse_markdown_to_blocks(content: str) -> list[dict]:
         # Regular paragraph — merge consecutive non-empty lines
         para_lines = [line]
         i += 1
-        while i < len(lines) and lines[i].strip() and not re.match(r"^(#{1,3}\s|!\[|[-*]\s|\d+\.\s)", lines[i].strip()):
+        while i < len(lines) and lines[i].strip() and not re.match(r"^(#{1,6}\s|!\[|[-*]\s|\d+\.\s)", lines[i].strip()):
             para_lines.append(lines[i].strip())
             i += 1
-        blocks.append({"type": "paragraph", "level": 0, "text": _strip_md_formatting(" ".join(para_lines))})
+        para_text = _strip_md_formatting(" ".join(para_lines))
+        # Skip kata pengantar content that Claude may have included
+        lower_text = para_text.lower()
+        if any(p in lower_text for p in _KATA_PENGANTAR_PATTERNS):
+            continue
+        blocks.append({"type": "paragraph", "level": 0, "text": para_text})
 
     return blocks
 
 
 _SKIP_HEADINGS = {"kata pengantar", "daftar isi", "cover"}
+
+# Patterns that indicate kata pengantar content to skip
+_KATA_PENGANTAR_PATTERNS = [
+    "puji syukur", "puji dan syukur", "segala rahmat", "kehadirat tuhan",
+    "kehadirat allah", "panjatkan kehadirat", "panjatkan puji",
+]
 
 _BULAN_ID = {
     1: "Januari", 2: "Februari", 3: "Maret", 4: "April",

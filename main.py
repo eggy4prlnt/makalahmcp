@@ -191,9 +191,11 @@ Contoh BAIK (WAJIB — detail, panjang, banyak kutipan):
 Tulis SEMUA paragraf dengan level detail dan panjang seperti contoh BAIK di atas. JANGAN PERNAH menulis paragraf pendek.
 
 ### Struktur (gunakan heading markdown #)
-PENTING: Kata Pengantar dan Daftar Isi TIDAK perlu ditulis dalam konten markdown.
-Keduanya akan di-generate OTOMATIS oleh sistem saat konversi ke DOCX/PDF.
-Mulai langsung dari Abstrak.
+SANGAT PENTING — DILARANG KERAS:
+- JANGAN tulis Kata Pengantar di konten. Kata Pengantar di-generate OTOMATIS oleh sistem.
+- JANGAN tulis Daftar Isi di konten. Daftar Isi di-generate OTOMATIS oleh sistem.
+- JANGAN tulis Cover di konten. Cover di-generate OTOMATIS oleh sistem.
+- Mulai langsung dari # I. Abstrak. JANGAN ada konten apapun sebelum # I. Abstrak.
 
 # I. Abstrak
 (Dalam Bahasa Indonesia DAN Bahasa Inggris, masing-masing 200-300 kata)
