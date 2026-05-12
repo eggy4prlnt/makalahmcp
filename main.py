@@ -1,11 +1,15 @@
 import json
 import os
 from datetime import datetime
+from pypdf import PdfReader
 
 from mcp.server.fastmcp import FastMCP
 
 from scraper import research_topic as do_research, search_university_logo as do_search_logo
 from converter import save_as_docx, save_as_pdf
+
+PEDOMAN_DIR = os.path.join(os.path.expanduser("~"), ".makalahmcp_pedoman")
+os.makedirs(PEDOMAN_DIR, exist_ok=True)
 
 mcp = FastMCP(
     "MakalahMCP",
@@ -22,13 +26,19 @@ FLOW WAJIB saat user minta buat makalah:
    - Dosen Pengampu (opsional, boleh dikosongkan)
 3. Cari logo universitas dengan tool search_logo
 4. Tahun OTOMATIS pakai tahun sekarang, JANGAN tanya ke user
-5. Lakukan research_topic dengan judul
-6. Generate konten makalah menggunakan prompt generate_makalah
-7. TUNJUKKAN konten makalah ke user dan TANYA: "Apakah konten sudah sesuai? Ada yang ingin diubah?"
-8. Jika user minta edit/ubah, lakukan perubahan sesuai permintaan user lalu tunjukkan lagi
-9. Jika user sudah setuju (bilang "ok", "sudah", "lanjut", "simpan", dll), baru simpan dengan save_makalah (format "both")
-10. Setelah disimpan, tanyakan: "File sudah disimpan. Ada yang ingin diubah lagi?"
-11. Jika user minta ubah lagi, edit konten dan simpan ulang dengan save_makalah
+5. Cek apakah ada pedoman dengan get_pedoman — jika ada, WAJIB ikuti struktur dari pedoman
+6. Lakukan research_topic dengan judul
+7. Generate konten makalah menggunakan prompt generate_makalah (sertakan struktur pedoman jika ada)
+8. TUNJUKKAN konten makalah ke user dan TANYA: "Apakah konten sudah sesuai? Ada yang ingin diubah?"
+9. Jika user minta edit/ubah, lakukan perubahan sesuai permintaan user lalu tunjukkan lagi
+10. Jika user sudah setuju (bilang "ok", "sudah", "lanjut", "simpan", dll), baru simpan dengan save_makalah (format "both")
+11. Setelah disimpan, tanyakan: "File sudah disimpan. Ada yang ingin diubah lagi?"
+12. Jika user minta ubah lagi, edit konten dan simpan ulang dengan save_makalah
+
+Jika user kasih file PDF sebagai contoh/pedoman:
+- Langsung panggil set_pedoman dengan path PDF tersebut
+- JANGAN tanya user apakah mau set pedoman, langsung simpan saja
+- Konfirmasi ke user: "Pedoman sudah disimpan, struktur makalah selanjutnya akan mengikuti format ini."
 """,
 )
 
@@ -70,6 +80,102 @@ async def search_logo(university_name: str) -> str:
     """
     result = await do_search_logo(university_name)
     return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def set_pedoman(pdf_path: str) -> str:
+    """Simpan PDF sebagai pedoman/template struktur makalah.
+
+    Bisa menyimpan beberapa pedoman sekaligus. Sistem akan mempelajari
+    struktur dari semua pedoman yang tersimpan.
+
+    Args:
+        pdf_path: Path absolut ke file PDF pedoman.
+
+    Returns:
+        JSON string dengan struktur yang diekstrak dan konfirmasi.
+    """
+    if not os.path.exists(pdf_path):
+        return json.dumps({"error": f"File tidak ditemukan: {pdf_path}"})
+
+    try:
+        reader = PdfReader(pdf_path)
+        all_text = []
+        for i, page in enumerate(reader.pages):
+            text = page.extract_text()
+            if text and text.strip():
+                all_text.append(f"[Halaman {i + 1}]\n{text.strip()}")
+
+        full_text = "\n\n".join(all_text)
+
+        # Extract structure
+        lines = full_text.split("\n")
+        structure = []
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            upper = line.upper()
+            if upper.startswith("BAB ") or upper in ("DAFTAR PUSTAKA", "KATA PENGANTAR", "DAFTAR ISI", "KESIMPULAN", "PENUTUP", "PENDAHULUAN", "PEMBAHASAN"):
+                structure.append({"type": "heading", "level": 1, "text": line})
+            elif len(line) < 200 and line[0].isdigit() and "." in line[:5]:
+                structure.append({"type": "heading", "level": 2, "text": line})
+
+        # Save with unique name based on filename
+        base_name = os.path.splitext(os.path.basename(pdf_path))[0]
+        safe_name = "".join(c if c.isalnum() or c in " -_" else "" for c in base_name)[:50].strip()
+        pedoman_file = os.path.join(PEDOMAN_DIR, f"{safe_name}.json")
+
+        pedoman = {
+            "source_file": pdf_path,
+            "name": base_name,
+            "total_pages": len(reader.pages),
+            "structure": structure,
+            "full_text": full_text[:10000],
+        }
+
+        with open(pedoman_file, "w") as f:
+            json.dump(pedoman, f, ensure_ascii=False, indent=2)
+
+        # Count total pedoman
+        total = len([f for f in os.listdir(PEDOMAN_DIR) if f.endswith(".json")])
+
+        summary = f"Pedoman '{base_name}' disimpan ({len(reader.pages)} halaman, {len(structure)} heading).\n"
+        summary += f"Total pedoman tersimpan: {total}\n\nStruktur:\n"
+        for s in structure:
+            prefix = "  " if s["level"] == 2 else ""
+            summary += f"{prefix}{s['text']}\n"
+
+        return json.dumps({"success": True, "summary": summary}, ensure_ascii=False, indent=2)
+
+    except Exception as e:
+        return json.dumps({"error": f"Gagal membaca PDF: {str(e)}"})
+
+
+@mcp.tool()
+async def get_pedoman() -> str:
+    """Lihat semua pedoman/template yang tersimpan.
+
+    Returns:
+        JSON string dengan daftar pedoman dan strukturnya.
+    """
+    files = [f for f in os.listdir(PEDOMAN_DIR) if f.endswith(".json")] if os.path.exists(PEDOMAN_DIR) else []
+
+    if not files:
+        return json.dumps({"has_pedoman": False, "message": "Belum ada pedoman. Gunakan set_pedoman untuk menambah template."})
+
+    pedoman_list = []
+    for f in files:
+        with open(os.path.join(PEDOMAN_DIR, f)) as fh:
+            data = json.load(fh)
+            pedoman_list.append({
+                "name": data.get("name", f),
+                "source": data.get("source_file", ""),
+                "pages": data.get("total_pages", 0),
+                "structure": data.get("structure", []),
+            })
+
+    return json.dumps({"has_pedoman": True, "count": len(pedoman_list), "pedoman": pedoman_list}, ensure_ascii=False, indent=2)
 
 
 @mcp.tool()
@@ -163,12 +269,33 @@ def generate_makalah(title: str, references_json: str) -> str:
         title: The makalah title.
         references_json: JSON string from research_topic tool output.
     """
+    # Load all pedoman if any exist
+    pedoman_section = ""
+    if os.path.exists(PEDOMAN_DIR):
+        files = [f for f in os.listdir(PEDOMAN_DIR) if f.endswith(".json")]
+        if files:
+            pedoman_section = "\n## PEDOMAN/TEMPLATE YANG HARUS DIIKUTI\n"
+            pedoman_section += "Berikut adalah contoh-contoh struktur makalah dari pedoman yang tersimpan.\n"
+            pedoman_section += "Pelajari SEMUA pedoman ini, lalu buat struktur yang KONSISTEN mengikuti pola yang sama.\n\n"
+            for fname in files:
+                with open(os.path.join(PEDOMAN_DIR, fname)) as fh:
+                    data = json.load(fh)
+                name = data.get("name", fname)
+                structure = data.get("structure", [])
+                if structure:
+                    pedoman_section += f"### Pedoman: {name}\n"
+                    for s in structure:
+                        prefix = "  " if s["level"] == 2 else ""
+                        pedoman_section += f"{prefix}{s['text']}\n"
+                    pedoman_section += "\n"
+            pedoman_section += "Gunakan struktur pedoman di atas sebagai kerangka. Sesuaikan judul sub-bab dengan topik makalah, tapi PERTAHANKAN jumlah BAB, urutan, dan pola yang sama.\n"
+
     return f"""Kamu adalah penulis akademik. Buat makalah lengkap dan komprehensif dengan judul:
 "{title}"
 
 Gunakan referensi berikut sebagai sumber:
 {references_json}
-
+{pedoman_section}
 ## ATURAN PENTING
 
 ### Panjang Konten — INI ATURAN PALING PENTING, TIDAK BOLEH DILANGGAR

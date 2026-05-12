@@ -205,24 +205,15 @@ def _add_cover_page(doc, title, title_en="", lecturer="", author="",
         p.add_run().add_picture(logo_path, width=Cm(4))
 
     doc.add_paragraph()  # spacing
-    _centered(doc, "Disusun oleh:", size=12, after=6)
+    _centered(doc, "Disusun Oleh :", size=12, after=12)
 
-    # Info penulis — centered using tab stops
-    if author or nim or lecturer:
-        def _info_line(label, value):
-            p = doc.add_paragraph()
-            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            p.paragraph_format.space_after = Pt(2)
-            p.paragraph_format.space_before = Pt(2)
-            r = p.add_run(f"{label}\t\t: {value}")
-            r.font.name = "Times New Roman"; r.font.size = Pt(12)
-
-        if author:
-            _info_line("Nama", author)
-        if nim:
-            _info_line("Nim", nim)
-        if lecturer:
-            _info_line("Dosen pengampu", lecturer)
+    # Info penulis — simple centered format
+    if author:
+        _centered(doc, f"Nama Mahasiswa - {author}", size=12, after=4)
+    if nim:
+        _centered(doc, f"NIM - {nim}", size=12, after=4)
+    if lecturer:
+        _centered(doc, f"Dosen Pengampu - {lecturer}", size=12, after=4)
 
     doc.add_paragraph()
     doc.add_paragraph()
@@ -578,15 +569,14 @@ def _pdf_cover(pdf, title, title_en="", lecturer="", author="",
         pdf.ln(8)
     pdf.ln(8)
     pdf._font("", 12)
-    pdf.cell(0, 7, "Disusun oleh:", align="C", new_x="LMARGIN", new_y="NEXT")
-    pdf.ln(3)
-    ix = pdf.l_margin + 20
+    pdf.cell(0, 7, "Disusun Oleh :", align="C", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(8)
     if author:
-        pdf.set_x(ix); pdf.cell(35, 7, "Nama"); pdf.cell(0, 7, f": {author}", new_x="LMARGIN", new_y="NEXT")
+        pdf.cell(0, 7, f"Nama Mahasiswa - {author}", align="C", new_x="LMARGIN", new_y="NEXT")
     if nim:
-        pdf.set_x(ix); pdf.cell(35, 7, "Nim"); pdf.cell(0, 7, f": {nim}", new_x="LMARGIN", new_y="NEXT")
+        pdf.cell(0, 7, f"NIM - {nim}", align="C", new_x="LMARGIN", new_y="NEXT")
     if lecturer:
-        pdf.set_x(ix); pdf.cell(35, 7, "Dosen pengampu"); pdf.cell(0, 7, f": {lecturer}", new_x="LMARGIN", new_y="NEXT")
+        pdf.cell(0, 7, f"Dosen Pengampu - {lecturer}", align="C", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(15)
     for txt in [program_studi, fakultas, universitas]:
         if txt:
