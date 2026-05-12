@@ -207,13 +207,10 @@ def _add_cover_page(doc, title, title_en="", lecturer="", author="",
     doc.add_paragraph()  # spacing
     _centered(doc, "Disusun Oleh :", size=12, after=12)
 
-    # Info penulis — simple centered format
-    if author:
-        _centered(doc, f"Nama Mahasiswa - {author}", size=12, after=4)
-    if nim:
-        _centered(doc, f"NIM - {nim}", size=12, after=4)
-    if lecturer:
-        _centered(doc, f"Dosen Pengampu - {lecturer}", size=12, after=4)
+    if author and nim:
+        _centered(doc, f"{author} {nim}", size=12, after=4)
+    elif author:
+        _centered(doc, author, size=12, after=4)
 
     doc.add_paragraph()
     doc.add_paragraph()
@@ -571,12 +568,10 @@ def _pdf_cover(pdf, title, title_en="", lecturer="", author="",
     pdf._font("", 12)
     pdf.cell(0, 7, "Disusun Oleh :", align="C", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(8)
-    if author:
-        pdf.cell(0, 7, f"Nama Mahasiswa - {author}", align="C", new_x="LMARGIN", new_y="NEXT")
-    if nim:
-        pdf.cell(0, 7, f"NIM - {nim}", align="C", new_x="LMARGIN", new_y="NEXT")
-    if lecturer:
-        pdf.cell(0, 7, f"Dosen Pengampu - {lecturer}", align="C", new_x="LMARGIN", new_y="NEXT")
+    if author and nim:
+        pdf.cell(0, 7, f"{author} {nim}", align="C", new_x="LMARGIN", new_y="NEXT")
+    elif author:
+        pdf.cell(0, 7, author, align="C", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(15)
     for txt in [program_studi, fakultas, universitas]:
         if txt:
