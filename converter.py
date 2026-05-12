@@ -369,19 +369,17 @@ def _add_daftar_isi(doc, headings):
         bm = _make_bookmark_id(text)
 
         if level == 1:
-            bab_match = re.match(r"^([IVX]+)\.\s*(.*)", text)
+            bab = _parse_bab_heading(text)
             is_dafpus = "daftar pustaka" in text.lower()
             if is_dafpus:
-                # Daftar Pustaka — with dots + page number
                 _toc_entry(doc, text.upper(), str(current_page), bookmark=bm)
                 current_page += 1
-            elif bab_match:
-                # BAB heading with roman numeral — label only
-                label = f"BAB {bab_match.group(1)} {bab_match.group(2).upper()}"
+            elif bab:
+                bab_num, bab_title = bab
+                label = f"BAB {bab_num} {bab_title.upper()}" if bab_title else f"BAB {bab_num}"
                 _toc_label(doc, label)
                 current_page += 2
             else:
-                # Other h1 (Penutup, Pendahuluan, etc.) — treat as BAB label
                 _toc_label(doc, text.upper())
                 current_page += 2
         elif level == 2:
@@ -390,31 +388,44 @@ def _add_daftar_isi(doc, headings):
         else:
             _toc_entry(doc, text, str(current_page), indent_cm=2.5, bookmark=bm)
 
-    doc.add_page_break()
+    # No page break here — _render_blocks_to_doc handles page breaks per BAB
 
 
 # --- Content ---
+def _parse_bab_heading(text):
+    """Parse BAB heading text. Returns (bab_number, bab_title) or None."""
+    # Match "I. Pendahuluan" or "II. Pembahasan"
+    m = re.match(r"^([IVX]+)\.\s*(.*)", text)
+    if m:
+        return m.group(1), m.group(2)
+    # Match "BAB I PENDAHULUAN" or "BAB II Pembahasan"
+    m = re.match(r"^BAB\s+([IVX]+)\s*(.*)", text, re.IGNORECASE)
+    if m:
+        return m.group(1), m.group(2)
+    return None
+
+
 def _render_blocks_to_doc(doc, blocks, image_counter=1):
     for block in blocks:
         if block["type"] == "heading":
             level = block["level"]
             text = block["text"]
 
-            # Skip front matter headings (already generated separately)
             if text.lower().strip() in _SKIP_HEADINGS:
                 continue
 
             bm = _make_bookmark_id(text)
 
             if level == 1:
-                # Page break before each BAB
+                # Page break before each BAB/h1
                 doc.add_page_break()
-                bab_match = re.match(r"^([IVX]+)\.\s*(.*)", text)
-                if bab_match:
-                    p = _centered(doc, f"BAB {bab_match.group(1)}", bold=True, size=14, after=6)
+                bab = _parse_bab_heading(text)
+                if bab:
+                    bab_num, bab_title = bab
+                    p = _centered(doc, f"BAB {bab_num}", bold=True, size=14, after=6)
                     _add_bookmark(p, bm)
-                    if bab_match.group(2):
-                        _centered(doc, bab_match.group(2).upper(), bold=True, size=14, after=18)
+                    if bab_title:
+                        _centered(doc, bab_title.upper(), bold=True, size=14, after=18)
                 else:
                     p = _centered(doc, text.upper(), bold=True, size=14, after=18)
                     _add_bookmark(p, bm)
@@ -681,13 +692,14 @@ def _pdf_daftar_isi(pdf, headings, page_map=None, link_map=None):
         lnk = link_map.get(i) if link_map else None
 
         if level == 1:
-            bab_match = re.match(r"^([IVX]+)\.\s*(.*)", text)
+            bab = _parse_bab_heading(text)
             is_dafpus = "daftar pustaka" in text.lower()
             if is_dafpus:
                 _pdf_toc_entry(pdf, text.upper(), pg, link=lnk)
                 est += 1
-            elif bab_match:
-                label = f"BAB {bab_match.group(1)} {bab_match.group(2).upper()}"
+            elif bab:
+                bab_num, bab_title = bab
+                label = f"BAB {bab_num} {bab_title.upper()}" if bab_title else f"BAB {bab_num}"
                 _pdf_toc_label(pdf, label)
                 est += 2
             else:
@@ -715,13 +727,14 @@ def _pdf_render(pdf, blocks, image_counter=1, link_map=None):
                 pdf.add_page()
                 if link_map and heading_idx in link_map:
                     pdf.set_link(link_map[heading_idx], y=0, page=pdf.page_no())
-                bab_match = re.match(r"^([IVX]+)\.\s*(.*)", text)
-                if bab_match:
+                bab = _parse_bab_heading(text)
+                if bab:
+                    bab_num, bab_title = bab
                     pdf._font("B", 14)
-                    pdf.cell(0, 8, f"BAB {bab_match.group(1)}", align="C", new_x="LMARGIN", new_y="NEXT")
+                    pdf.cell(0, 8, f"BAB {bab_num}", align="C", new_x="LMARGIN", new_y="NEXT")
                     pdf.ln(3)
-                    if bab_match.group(2):
-                        pdf.multi_cell(0, 8, bab_match.group(2).upper(), align="C", new_x="LMARGIN", new_y="NEXT")
+                    if bab_title:
+                        pdf.multi_cell(0, 8, bab_title.upper(), align="C", new_x="LMARGIN", new_y="NEXT")
                     pdf.ln(10)
                 else:
                     pdf._font("B", 14)
