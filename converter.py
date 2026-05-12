@@ -81,8 +81,15 @@ def _parse_markdown_to_blocks(content: str) -> list[dict]:
             i += 1
         para_text = _strip_md_formatting(" ".join(para_lines))
         # Skip kata pengantar content that Claude may have included
-        lower_text = para_text.lower()
+        lower_text = para_text.lower().strip()
+        # Skip kata pengantar content
         if any(p in lower_text for p in _KATA_PENGANTAR_PATTERNS):
+            continue
+        # Skip short standalone lines like "Penulis", "Penyusun"
+        if lower_text in _SKIP_SHORT_LINES:
+            continue
+        # Skip city+date lines like "Jakarta, Mei 2026" or "Cilacap, juli 2018"
+        if re.match(r"^[a-zA-Z]+,\s*(januari|februari|maret|april|mei|juni|juli|agustus|september|oktober|november|desember|\w+)\s*\d{4}$", lower_text, re.IGNORECASE):
             continue
         blocks.append({"type": "paragraph", "level": 0, "text": para_text})
 
@@ -103,7 +110,11 @@ _KATA_PENGANTAR_PATTERNS = [
     "terima kasih kepada semua pihak", "terimakasih kepada semua pihak",
     "bantuan dari pihak yang telah", "semoga makalah ini dapat",
     "makalah ini dapat tersusun", "menyelesaikan makalah",
+    "membantu dalam penyusunan", "bahan pembelajaran",
 ]
+
+# Short standalone lines to skip (exact or near-exact match)
+_SKIP_SHORT_LINES = {"penulis", "penyusun", "hormat kami", "wassalam"}
 
 _BULAN_ID = {
     1: "Januari", 2: "Februari", 3: "Maret", 4: "April",
