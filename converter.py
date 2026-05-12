@@ -29,6 +29,7 @@ def _parse_markdown_to_blocks(content: str) -> list[dict]:
     lines = content.split("\n")
     i = 0
     in_daftar_pustaka = False
+    found_first_heading = False  # Skip ALL content before first heading
 
     while i < len(lines):
         line = lines[i].strip()
@@ -38,14 +39,19 @@ def _parse_markdown_to_blocks(content: str) -> list[dict]:
 
         heading_match = re.match(r"^(#{1,6})\s+(.*)", line)
         if heading_match:
-            level = min(len(heading_match.group(1)), 3)  # cap at level 3
+            level = min(len(heading_match.group(1)), 3)
             text = heading_match.group(2)
             clean_text = _strip_md_formatting(text)
-            # Skip headings that are front matter
+            # Skip front matter headings
             if clean_text.lower().strip() not in _SKIP_HEADINGS:
                 blocks.append({"type": "heading", "level": level, "text": clean_text})
-            # Detect Daftar Pustaka section
+                found_first_heading = True
             in_daftar_pustaka = "daftar pustaka" in text.lower()
+            i += 1
+            continue
+
+        # SKIP everything before the first real heading
+        if not found_first_heading:
             i += 1
             continue
 
@@ -68,29 +74,17 @@ def _parse_markdown_to_blocks(content: str) -> list[dict]:
             continue
 
         if in_daftar_pustaka:
-            # In Daftar Pustaka: each line is a separate reference entry
             blocks.append({"type": "reference", "level": 0, "text": line})
             i += 1
             continue
 
-        # Regular paragraph — merge consecutive non-empty lines
+        # Regular paragraph
         para_lines = [line]
         i += 1
         while i < len(lines) and lines[i].strip() and not re.match(r"^(#{1,6}\s|!\[|[-*]\s|\d+\.\s)", lines[i].strip()):
             para_lines.append(lines[i].strip())
             i += 1
         para_text = _strip_md_formatting(" ".join(para_lines))
-        # Skip kata pengantar content that Claude may have included
-        lower_text = para_text.lower().strip()
-        # Skip kata pengantar content
-        if any(p in lower_text for p in _KATA_PENGANTAR_PATTERNS):
-            continue
-        # Skip short standalone lines like "Penulis", "Penyusun"
-        if lower_text in _SKIP_SHORT_LINES:
-            continue
-        # Skip city+date lines like "Jakarta, Mei 2026" or "Cilacap, juli 2018"
-        if re.match(r"^[a-zA-Z]+,\s*(januari|februari|maret|april|mei|juni|juli|agustus|september|oktober|november|desember|\w+)\s*\d{4}$", lower_text, re.IGNORECASE):
-            continue
         blocks.append({"type": "paragraph", "level": 0, "text": para_text})
 
     return blocks
