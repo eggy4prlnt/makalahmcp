@@ -13,6 +13,16 @@ from fpdf import FPDF
 # Shared: Markdown parser
 # =============================================================================
 
+def _strip_md_formatting(text: str) -> str:
+    """Remove markdown bold/italic markers from text."""
+    text = re.sub(r'\*\*\*(.+?)\*\*\*', r'\1', text)  # ***bold italic***
+    text = re.sub(r'\*\*(.+?)\*\*', r'\1', text)      # **bold**
+    text = re.sub(r'\*(.+?)\*', r'\1', text)           # *italic*
+    text = re.sub(r'__(.+?)__', r'\1', text)           # __bold__
+    text = re.sub(r'_(.+?)_', r'\1', text)             # _italic_
+    return text
+
+
 def _parse_markdown_to_blocks(content: str) -> list[dict]:
     """Parse markdown content into structured blocks."""
     blocks = []
@@ -30,7 +40,7 @@ def _parse_markdown_to_blocks(content: str) -> list[dict]:
         if heading_match:
             level = min(len(heading_match.group(1)), 3)  # cap at level 3
             text = heading_match.group(2)
-            blocks.append({"type": "heading", "level": level, "text": text})
+            blocks.append({"type": "heading", "level": level, "text": _strip_md_formatting(text)})
             # Detect Daftar Pustaka section
             in_daftar_pustaka = "daftar pustaka" in text.lower()
             i += 1
@@ -44,13 +54,13 @@ def _parse_markdown_to_blocks(content: str) -> list[dict]:
 
         list_match = re.match(r"^[-*]\s+(.*)", line)
         if list_match:
-            blocks.append({"type": "list_item", "level": 0, "text": list_match.group(1)})
+            blocks.append({"type": "list_item", "level": 0, "text": _strip_md_formatting(list_match.group(1))})
             i += 1
             continue
 
         num_list_match = re.match(r"^(\d+)\.\s+(.*)", line)
         if num_list_match:
-            blocks.append({"type": "numbered_item", "level": 0, "text": num_list_match.group(2), "number": num_list_match.group(1)})
+            blocks.append({"type": "numbered_item", "level": 0, "text": _strip_md_formatting(num_list_match.group(2)), "number": num_list_match.group(1)})
             i += 1
             continue
 
@@ -66,7 +76,7 @@ def _parse_markdown_to_blocks(content: str) -> list[dict]:
         while i < len(lines) and lines[i].strip() and not re.match(r"^(#{1,3}\s|!\[|[-*]\s|\d+\.\s)", lines[i].strip()):
             para_lines.append(lines[i].strip())
             i += 1
-        blocks.append({"type": "paragraph", "level": 0, "text": " ".join(para_lines)})
+        blocks.append({"type": "paragraph", "level": 0, "text": _strip_md_formatting(" ".join(para_lines))})
 
     return blocks
 
@@ -164,41 +174,22 @@ def _add_cover_page(doc, title, title_en="", lecturer="", author="",
     doc.add_paragraph()  # spacing
     _centered(doc, "Di susun oleh:", size=12, after=6)
 
-    # Table for Nama / NIM / Dosen — centered with fixed column widths
+    # Info penulis — centered using tab stops
     if author or nim or lecturer:
-        table = doc.add_table(rows=0, cols=2)
-        table.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        # Set column widths to keep table compact and centered
-        table.columns[0].width = Cm(4.5)
-        table.columns[1].width = Cm(7.0)
-
-        def _row(label, value):
-            row = table.add_row()
-            for cell in row.cells:
-                tc = cell._tc.get_or_add_tcPr()
-                borders = OxmlElement('w:tcBorders')
-                for edge in ('top', 'left', 'bottom', 'right'):
-                    e = OxmlElement(f'w:{edge}')
-                    e.set(qn('w:val'), 'none')
-                    e.set(qn('w:sz'), '0')
-                    borders.append(e)
-                tc.append(borders)
-            c0, c1 = row.cells
-            c0.width = Cm(4.5)
-            c1.width = Cm(7.0)
-            c0.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
-            c1.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
-            r0 = c0.paragraphs[0].add_run(label)
-            r0.font.name = "Times New Roman"; r0.font.size = Pt(12)
-            r1 = c1.paragraphs[0].add_run(f": {value}")
-            r1.font.name = "Times New Roman"; r1.font.size = Pt(12)
+        def _info_line(label, value):
+            p = doc.add_paragraph()
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            p.paragraph_format.space_after = Pt(2)
+            p.paragraph_format.space_before = Pt(2)
+            r = p.add_run(f"{label}\t\t: {value}")
+            r.font.name = "Times New Roman"; r.font.size = Pt(12)
 
         if author:
-            _row("Nama", author)
+            _info_line("Nama", author)
         if nim:
-            _row("Nim", nim)
+            _info_line("Nim", nim)
         if lecturer:
-            _row("Dosen pengampu", lecturer)
+            _info_line("Dosen pengampu", lecturer)
 
     doc.add_paragraph()
     doc.add_paragraph()
@@ -364,15 +355,20 @@ def _add_daftar_isi(doc, headings):
 
         if level == 1:
             bab_match = re.match(r"^([IVX]+)\.\s*(.*)", text)
-            if bab_match:
-                # BAB heading — label only, no dots, no page number
+            is_dafpus = "daftar pustaka" in text.lower()
+            if is_dafpus:
+                # Daftar Pustaka — with dots + page number
+                _toc_entry(doc, text.upper(), str(current_page), bookmark=bm)
+                current_page += 1
+            elif bab_match:
+                # BAB heading with roman numeral — label only
                 label = f"BAB {bab_match.group(1)} {bab_match.group(2).upper()}"
                 _toc_label(doc, label)
                 current_page += 2
             else:
-                # Non-BAB h1 (like "Daftar Pustaka", "Kesimpulan") — with dots + page
-                _toc_entry(doc, text.upper(), str(current_page), bookmark=bm)
-                current_page += 1
+                # Other h1 (Penutup, Pendahuluan, etc.) — treat as BAB label
+                _toc_label(doc, text.upper())
+                current_page += 2
         elif level == 2:
             _toc_entry(doc, text, str(current_page), indent_cm=1.0, bookmark=bm)
             current_page += 1
@@ -669,15 +665,17 @@ def _pdf_daftar_isi(pdf, headings, page_map=None, link_map=None):
 
         if level == 1:
             bab_match = re.match(r"^([IVX]+)\.\s*(.*)", text)
-            if bab_match:
-                # BAB heading — label only, no dots
+            is_dafpus = "daftar pustaka" in text.lower()
+            if is_dafpus:
+                _pdf_toc_entry(pdf, text.upper(), pg, link=lnk)
+                est += 1
+            elif bab_match:
                 label = f"BAB {bab_match.group(1)} {bab_match.group(2).upper()}"
                 _pdf_toc_label(pdf, label)
                 est += 2
             else:
-                # Non-BAB h1 (Daftar Pustaka, Kesimpulan) — with dots
-                _pdf_toc_entry(pdf, text.upper(), pg, link=lnk)
-                est += 1
+                _pdf_toc_label(pdf, text.upper())
+                est += 2
         elif level == 2:
             _pdf_toc_entry(pdf, text, pg, indent=10, link=lnk)
             est += 1
