@@ -4,7 +4,7 @@ import os
 import re
 import tempfile
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin, urlparse, unquote, parse_qs
 from pypdf import PdfReader
 
 HEADERS = {
@@ -34,8 +34,7 @@ async def web_search(query: str, num_results: int = 5) -> list[str]:
             href = href[0]
         # DuckDuckGo wraps URLs in a redirect, extract the actual URL
         if "uddg=" in href:
-            from urllib.parse import unquote, parse_qs, urlparse as _urlparse
-            parsed = _urlparse(href)
+            parsed = urlparse(href)
             qs = parse_qs(parsed.query)
             if "uddg" in qs:
                 href = unquote(qs["uddg"][0])

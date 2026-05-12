@@ -117,6 +117,9 @@ async def save_makalah(
     if not year:
         year = str(datetime.now().year)
 
+    if format not in ("docx", "pdf", "both"):
+        return json.dumps({"error": f"Format '{format}' tidak valid. Gunakan 'docx', 'pdf', atau 'both'."})
+
     files = []
     kwargs = dict(
         content=content,
@@ -199,15 +202,15 @@ DILARANG KERAS:
 - JANGAN pakai **bold** atau *italic* di dalam teks. Tulis teks biasa saja tanpa formatting markdown.
 - JANGAN pakai format heading lain selain yang ditentukan di bawah ini
 
-FORMAT HEADING YANG BENAR (COPY PERSIS):
+FORMAT HEADING YANG BENAR (COPY PERSIS, nomor sub-bab ikut nomor BAB):
 ```
 # I. Abstrak
 # II. Pendahuluan
-## 1.1 Latar Belakang
-## 1.2 Rumusan Masalah
-## 1.3 Tujuan Penulisan
-## 1.4 Manfaat Penulisan
-## 1.5 Tinjauan Pustaka
+## 2.1 Latar Belakang
+## 2.2 Rumusan Masalah
+## 2.3 Tujuan Penulisan
+## 2.4 Manfaat Penulisan
+## 2.5 Tinjauan Pustaka
 # III. Metode Penelitian
 ## 3.1 Pendekatan Penelitian
 ## 3.2 Tahapan Penelitian

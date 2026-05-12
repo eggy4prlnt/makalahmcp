@@ -29,7 +29,6 @@ def _parse_markdown_to_blocks(content: str) -> list[dict]:
     lines = content.split("\n")
     i = 0
     in_daftar_pustaka = False
-    found_first_heading = False
 
     while i < len(lines):
         line = lines[i].strip()
@@ -45,7 +44,6 @@ def _parse_markdown_to_blocks(content: str) -> list[dict]:
             # Skip headings that are front matter
             if clean_text.lower().strip() not in _SKIP_HEADINGS:
                 blocks.append({"type": "heading", "level": level, "text": clean_text})
-                found_first_heading = True
             # Detect Daftar Pustaka section
             in_daftar_pustaka = "daftar pustaka" in text.lower()
             i += 1
@@ -188,7 +186,7 @@ def _add_cover_page(doc, title, title_en="", lecturer="", author="",
         p.add_run().add_picture(logo_path, width=Cm(4))
 
     doc.add_paragraph()  # spacing
-    _centered(doc, "Di susun oleh:", size=12, after=6)
+    _centered(doc, "Disusun oleh:", size=12, after=6)
 
     # Info penulis — centered using tab stops
     if author or nim or lecturer:
@@ -228,7 +226,7 @@ def _add_kata_pengantar(doc, title, author="", nim="", year=""):
     _add_bookmark(p, "_bm_kata_pengantar")
 
     texts = [
-        "Puji syukur kehadirat Tuhan Yang Maha Esa atas segala rahmatNYA "
+        "Puji syukur kehadirat Tuhan Yang Maha Esa atas segala rahmat-Nya "
         "sehingga makalah ini dapat tersusun hingga selesai . Tidak lupa kami juga "
         "mengucapkan banyak terimakasih atas bantuan dari pihak yang telah "
         "berkontribusi dengan memberikan sumbangan baik materi maupun pikirannya.",
@@ -445,10 +443,15 @@ def _render_blocks_to_doc(doc, blocks, image_counter=1):
                 p = doc.add_paragraph()
                 p.alignment = WD_ALIGN_PARAGRAPH.CENTER
                 p.add_run().add_picture(path, width=Cm(12))
-                cap = block["caption"] or f"Gambar {image_counter}"
+                cap = block["caption"] or ""
+                # Avoid duplicate "Gambar N:" prefix
+                if re.match(r"^Gambar\s+\d+", cap, re.IGNORECASE):
+                    cap_text = cap
+                else:
+                    cap_text = f"Gambar {image_counter}: {cap}" if cap else f"Gambar {image_counter}"
                 pc = doc.add_paragraph()
                 pc.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                r = pc.add_run(f"Gambar {image_counter}: {cap}")
+                r = pc.add_run(cap_text)
                 r.font.name = "Times New Roman"; r.font.size = Pt(10); r.italic = True
                 image_counter += 1
 
@@ -556,7 +559,7 @@ def _pdf_cover(pdf, title, title_en="", lecturer="", author="",
         pdf.ln(8)
     pdf.ln(8)
     pdf._font("", 12)
-    pdf.cell(0, 7, "Di susun oleh:", align="C", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 7, "Disusun oleh:", align="C", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(3)
     ix = pdf.l_margin + 20
     if author:
@@ -582,7 +585,7 @@ def _pdf_kata_pengantar(pdf, title, author="", nim="", year=""):
     pdf.cell(0, 8, "KATA PENGANTAR", align="C", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(10)
     texts = [
-        "Puji syukur kehadirat Tuhan Yang Maha Esa atas segala rahmatNYA "
+        "Puji syukur kehadirat Tuhan Yang Maha Esa atas segala rahmat-Nya "
         "sehingga makalah ini dapat tersusun hingga selesai . Tidak lupa kami juga "
         "mengucapkan banyak terimakasih atas bantuan dari pihak yang telah "
         "berkontribusi dengan memberikan sumbangan baik materi maupun pikirannya.",
@@ -748,9 +751,13 @@ def _pdf_render(pdf, blocks, image_counter=1, link_map=None):
                 iw = min(120, pw)
                 pdf.image(path, x=pdf.l_margin + (pw - iw) / 2, w=iw)
                 pdf.ln(3)
-                cap = block["caption"] or f"Gambar {image_counter}"
+                cap = block["caption"] or ""
+                if re.match(r"^Gambar\s+\d+", cap, re.IGNORECASE):
+                    cap_text = cap
+                else:
+                    cap_text = f"Gambar {image_counter}: {cap}" if cap else f"Gambar {image_counter}"
                 pdf._font("I", 10)
-                pdf.cell(0, 6, f"Gambar {image_counter}: {cap}", align="C", new_x="LMARGIN", new_y="NEXT")
+                pdf.cell(0, 6, cap_text, align="C", new_x="LMARGIN", new_y="NEXT")
                 pdf.ln(3); image_counter += 1
 
         elif block["type"] in ("list_item", "numbered_item"):
@@ -789,15 +796,7 @@ def save_as_pdf(content, title, output_path, title_en="", lecturer="",
               nim=nim, program_studi=program_studi, fakultas=fakultas,
               universitas=universitas, year=year, logo_path=logo_path)
 
-    # Pass 1: track page numbers
-    p1 = MakalahPDF()
-    _pdf_cover(p1, **kw)
-    _pdf_kata_pengantar(p1, title=title, author=author, nim=nim, year=year)
-    _pdf_daftar_isi(p1, headings)
-    p1._content_start_page = p1.page_no() + 1
-    p1._page_number_style = "arabic"
-    _pdf_render(p1, blocks)
-
+    # Track page numbers for TOC
     page_map = {}
     pt = MakalahPDF()
     _pdf_cover(pt, **kw)
