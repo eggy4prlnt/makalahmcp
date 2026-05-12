@@ -1,0 +1,14 @@
+services:
+  makalahmcp:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+    volumes:
+      - pedoman_data:/root/.makalahmcp_pedoman
+    restart: unless-stopped
+
+volumes:
+  pedoman_data:

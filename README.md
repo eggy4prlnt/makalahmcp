@@ -133,3 +133,55 @@ makalahmcp/
 - Format sama dengan DOCX
 - Nomor halaman: romawi (ii, iii) untuk front matter, arab (1, 2, 3) untuk konten
 - Daftar isi clickable (internal links)
+
+## Deploy ke Server (Remote HTTP)
+
+### Dengan Docker
+
+```bash
+# Clone dan build
+git clone <repo-url>
+cd makalahmcp
+docker compose up -d --build
+```
+
+Server jalan di `http://localhost:8000`.
+
+### Dengan Nginx Reverse Proxy
+
+```nginx
+server {
+    listen 80;
+    server_name makalah.domainmu.com;
+
+    location / {
+        proxy_pass http://localhost:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_read_timeout 300s;
+    }
+}
+```
+
+### User Connect via URL
+
+User cukup tambahkan ke Claude Desktop config:
+
+```json
+{
+  "mcpServers": {
+    "makalahmcp": {
+      "type": "streamable-http",
+      "url": "https://makalah.domainmu.com/mcp"
+    }
+  }
+}
+```
+
+Atau di Claude Code:
+
+```bash
+claude mcp add makalahmcp --transport http https://makalah.domainmu.com/mcp
+```
