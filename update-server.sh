@@ -29,11 +29,24 @@ else
 fi
 echo ""
 
-# Pull latest changes
+# Pull latest changes and remove deleted files
 echo "2. Pulling latest changes from git..."
 git fetch origin
+
+# Show what will be deleted
+echo ""
+echo "   Files that will be removed:"
+git diff --name-status HEAD origin/main | grep "^D" | awk '{print "   - " $2}' || echo "   (none)"
+echo ""
+
+# Reset to match remote exactly (removes deleted files)
 git reset --hard origin/main
+
+# Clean untracked files
+git clean -fd
+
 echo "   ✅ Code updated to latest version"
+echo "   ✅ Deleted files removed"
 echo ""
 
 # Show current commit
