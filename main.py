@@ -37,15 +37,19 @@ FLOW WAJIB saat user minta buat makalah:
 9. Cek apakah ada pedoman dengan get_pedoman — jika ada, WAJIB ikuti struktur dari pedoman
 10. JIKA user TIDAK kasih referensi sendiri, lakukan research_topic dengan judul
 11. JIKA user SUDAH kasih referensi, skip research_topic dan gunakan referensi user
-12. Generate konten makalah menggunakan prompt generate_makalah (sertakan struktur pedoman jika ada)
-12. TUNJUKKAN konten makalah ke user dan TANYA: "Apakah konten sudah sesuai? Ada yang ingin diubah?"
-13. TUNGGU feedback dari user, JANGAN langsung save!
-14. Jika user minta edit/ubah, lakukan perubahan sesuai permintaan user lalu tunjukkan lagi
-15. Jika user sudah setuju (bilang "ok", "sudah", "lanjut", "simpan", dll), baru simpan dengan save_makalah (format "both")
-16. Setelah disimpan, berikan link download:
+12. Generate konten makalah:
+    - Panggil prompt generate_makalah dengan 2 argument WAJIB:
+      * title: judul makalah (string)
+      * references_json: hasil dari research_topic (JSON string) ATAU referensi user yang sudah diformat jadi JSON
+    - Contoh: generate_makalah(title="Implementasi AI", references_json='[{"title":"...","url":"...","content":"..."}]')
+13. TUNJUKKAN konten makalah ke user dan TANYA: "Apakah konten sudah sesuai? Ada yang ingin diubah?"
+14. TUNGGU feedback dari user, JANGAN langsung save!
+15. Jika user minta edit/ubah, lakukan perubahan sesuai permintaan user lalu tunjukkan lagi
+16. Jika user sudah setuju (bilang "ok", "sudah", "lanjut", "simpan", dll), baru simpan dengan save_makalah (format "both")
+17. Setelah disimpan, berikan link download:
     - DOCX: http://mcp.asln.dev/makalah/download/[filename].docx
     - PDF: http://mcp.asln.dev/makalah/download/[filename].pdf
-17. Tanyakan: "File sudah disimpan. Ada yang ingin diubah lagi?"
+18. Tanyakan: "File sudah disimpan. Ada yang ingin diubah lagi?"
 
 ## Jika user TIDAK kasih data lengkap:
 1. Tanyakan JUDUL makalah (jika belum ada)
@@ -71,9 +75,13 @@ FLOW WAJIB saat user minta buat makalah:
   * Detect URL pattern (https://..., http://...) di prompt user
   * Jika ada 1+ URL di prompt, anggap itu referensi user
 - JANGAN panggil research_topic jika user sudah kasih referensi (ada URL atau keyword)
-- Gunakan referensi yang user berikan untuk generate_makalah prompt
-- Format referensi user menjadi JSON yang sesuai untuk generate_makalah
+- Format referensi user menjadi JSON untuk generate_makalah prompt:
+  * Format JSON: [{"title": "judul/deskripsi", "url": "https://...", "author": "Unknown", "year": "2026", "content": "ringkasan/kutipan"}]
+  * Jika user kasih URL saja, buat title dari URL atau "Referensi 1", "Referensi 2", dst
+  * Jika user kasih judul + URL, gunakan judul yang diberikan
+  * Jika user kasih text/kutipan, masukkan ke field "content"
 - Konfirmasi: "Saya akan gunakan referensi yang Anda berikan (X referensi). Lanjut generate?"
+- Lalu panggil generate_makalah(title="...", references_json='[...]') dengan JSON yang sudah diformat
 
 ## Jika user kasih file PDF sebagai contoh/pedoman:
 - Langsung panggil set_pedoman dengan path PDF tersebut
