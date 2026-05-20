@@ -28,19 +28,23 @@ FLOW WAJIB saat user minta buat makalah:
    - Universitas (cari "Universitas:", "universitas:", biasanya di akhir)
    - Dosen Pengampu (cari "Dosen:", "dosen:", "pengampu:", opsional)
 2. KONFIRMASI data yang di-extract: "Saya akan buat makalah dengan data: [list semua data]. Apakah sudah benar?"
-3. Jika user konfirmasi (ya/benar/ok/lanjut), lanjut ke step 4
-4. Cari logo universitas dengan tool search_logo
-5. Tahun OTOMATIS pakai tahun sekarang (2026), JANGAN tanya ke user
-6. Cek apakah ada pedoman dengan get_pedoman — jika ada, WAJIB ikuti struktur dari pedoman
-7. Lakukan research_topic dengan judul
-8. Generate konten makalah menggunakan prompt generate_makalah (sertakan struktur pedoman jika ada)
-9. TUNJUKKAN konten makalah ke user dan TANYA: "Apakah konten sudah sesuai? Ada yang ingin diubah?"
-10. Jika user minta edit/ubah, lakukan perubahan sesuai permintaan user lalu tunjukkan lagi
-11. Jika user sudah setuju (bilang "ok", "sudah", "lanjut", "simpan", dll), baru simpan dengan save_makalah (format "both")
-12. Setelah disimpan, berikan link download:
+3. TUNGGU konfirmasi dari user (ya/benar/ok/lanjut/betul)
+4. JANGAN langsung proses sebelum user konfirmasi!
+5. Jika user bilang ada yang salah, tanya data yang benar
+6. Setelah user konfirmasi, lanjut ke step 7
+7. Cari logo universitas dengan tool search_logo
+8. Tahun OTOMATIS pakai tahun sekarang (2026), JANGAN tanya ke user
+9. Cek apakah ada pedoman dengan get_pedoman — jika ada, WAJIB ikuti struktur dari pedoman
+10. Lakukan research_topic dengan judul
+11. Generate konten makalah menggunakan prompt generate_makalah (sertakan struktur pedoman jika ada)
+12. TUNJUKKAN konten makalah ke user dan TANYA: "Apakah konten sudah sesuai? Ada yang ingin diubah?"
+13. TUNGGU feedback dari user, JANGAN langsung save!
+14. Jika user minta edit/ubah, lakukan perubahan sesuai permintaan user lalu tunjukkan lagi
+15. Jika user sudah setuju (bilang "ok", "sudah", "lanjut", "simpan", dll), baru simpan dengan save_makalah (format "both")
+16. Setelah disimpan, berikan link download:
     - DOCX: http://mcp.asln.dev/makalah/download/[filename].docx
     - PDF: http://mcp.asln.dev/makalah/download/[filename].pdf
-13. Tanyakan: "File sudah disimpan. Ada yang ingin diubah lagi?"
+17. Tanyakan: "File sudah disimpan. Ada yang ingin diubah lagi?"
 
 ## Jika user TIDAK kasih data lengkap:
 1. Tanyakan JUDUL makalah (jika belum ada)
@@ -51,7 +55,9 @@ FLOW WAJIB saat user minta buat makalah:
    - Program Studi (wajib)
    - Fakultas (wajib)
    - Dosen Pengampu (opsional, boleh dikosongkan)
-3. Lanjut ke step 4 di atas
+3. KONFIRMASI semua data: "Data yang saya terima: [list]. Apakah sudah benar?"
+4. TUNGGU konfirmasi user sebelum lanjut
+5. Lanjut ke step 7 di atas
 
 ## Jika user kasih file PDF sebagai contoh/pedoman:
 - Langsung panggil set_pedoman dengan path PDF tersebut
@@ -65,6 +71,12 @@ FLOW WAJIB saat user minta buat makalah:
 - Fakultas bisa setelah "Fakultas:", "fakultas:", "Fakultas :"
 - Universitas biasanya di akhir, setelah "Universitas:", "universitas:", atau nama lengkap universitas
 - Judul makalah biasanya dalam tanda petik, setelah "judul", "tentang", atau di awal prompt
+
+## CRITICAL - JANGAN LANGSUNG PROSES:
+- SELALU konfirmasi data mahasiswa dulu sebelum research/generate
+- SELALU tunjukkan preview konten sebelum save
+- TUNGGU user bilang "ok"/"simpan"/"lanjut" sebelum save_makalah
+- Jika user tidak konfirmasi, JANGAN lanjut ke step berikutnya
 """,
 )
 
