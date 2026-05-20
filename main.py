@@ -164,12 +164,21 @@ async def set_pedoman(pdf_path: str) -> str:
         return json.dumps({"error": f"File tidak ditemukan: {pdf_path}"})
 
     try:
+        import warnings
+        # Suppress pypdf encoding warnings
+        warnings.filterwarnings('ignore', category=UserWarning, module='pypdf')
+
         reader = PdfReader(pdf_path)
         all_text = []
         for i, page in enumerate(reader.pages):
-            text = page.extract_text()
-            if text and text.strip():
-                all_text.append(f"[Halaman {i + 1}]\n{text.strip()}")
+            try:
+                text = page.extract_text()
+                if text and text.strip():
+                    all_text.append(f"[Halaman {i + 1}]\n{text.strip()}")
+            except Exception as e:
+                # Skip pages with encoding issues
+                all_text.append(f"[Halaman {i + 1}]\n[Error extracting text: {str(e)}]")
+                continue
 
         full_text = "\n\n".join(all_text)
 
