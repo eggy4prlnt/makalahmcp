@@ -21,8 +21,8 @@ echo ""
 
 # Stop running containers
 echo "1. Stopping running containers..."
-if docker-compose ps | grep -q "Up"; then
-    docker-compose down
+if docker compose ps | grep -q "Up"; then
+    docker compose down
     echo "   ✅ Containers stopped"
 else
     echo "   ℹ️  No running containers"
@@ -56,13 +56,13 @@ echo ""
 
 # Rebuild containers
 echo "3. Rebuilding Docker containers..."
-docker-compose build --no-cache
+docker compose build --no-cache
 echo "   ✅ Containers rebuilt"
 echo ""
 
 # Start containers
 echo "4. Starting containers..."
-docker-compose up -d
+docker compose up -d
 echo "   ✅ Containers started"
 echo ""
 
@@ -86,10 +86,10 @@ echo "✅ Update Complete!"
 echo "=============================="
 echo ""
 echo "📊 Service Status:"
-docker-compose ps
+docker compose ps
 echo ""
 echo "📝 View logs:"
-echo "   docker-compose logs -f"
+echo "   docker compose logs -f"
 echo ""
 echo "🌐 Service URL:"
 echo "   http://localhost:8000"
