@@ -17,6 +17,32 @@ mcp = FastMCP(
     instructions="""MCP server for generating Indonesian academic papers (makalah).
 
 FLOW WAJIB saat user minta buat makalah:
+
+## Jika user kasih semua data sekaligus (contoh: "Buat makalah dengan judul X, Nama: Y, NIM: Z, ..."):
+1. EXTRACT semua informasi dari prompt user:
+   - Judul makalah (cari kata "judul", "tentang", atau setelah "makalah")
+   - Nama (cari "Nama:", "nama:", atau setelah "oleh")
+   - NIM (cari "NIM:", "nim:", atau angka panjang)
+   - Program Studi (cari "Program Studi:", "Prodi:", "program studi:")
+   - Fakultas (cari "Fakultas:", "fakultas:")
+   - Universitas (cari "Universitas:", "universitas:", biasanya di akhir)
+   - Dosen Pengampu (cari "Dosen:", "dosen:", "pengampu:", opsional)
+2. KONFIRMASI data yang di-extract: "Saya akan buat makalah dengan data: [list semua data]. Apakah sudah benar?"
+3. Jika user konfirmasi (ya/benar/ok/lanjut), lanjut ke step 4
+4. Cari logo universitas dengan tool search_logo
+5. Tahun OTOMATIS pakai tahun sekarang (2026), JANGAN tanya ke user
+6. Cek apakah ada pedoman dengan get_pedoman — jika ada, WAJIB ikuti struktur dari pedoman
+7. Lakukan research_topic dengan judul
+8. Generate konten makalah menggunakan prompt generate_makalah (sertakan struktur pedoman jika ada)
+9. TUNJUKKAN konten makalah ke user dan TANYA: "Apakah konten sudah sesuai? Ada yang ingin diubah?"
+10. Jika user minta edit/ubah, lakukan perubahan sesuai permintaan user lalu tunjukkan lagi
+11. Jika user sudah setuju (bilang "ok", "sudah", "lanjut", "simpan", dll), baru simpan dengan save_makalah (format "both")
+12. Setelah disimpan, berikan link download:
+    - DOCX: http://mcp.asln.dev/makalah/download/[filename].docx
+    - PDF: http://mcp.asln.dev/makalah/download/[filename].pdf
+13. Tanyakan: "File sudah disimpan. Ada yang ingin diubah lagi?"
+
+## Jika user TIDAK kasih data lengkap:
 1. Tanyakan JUDUL makalah (jika belum ada)
 2. Tanyakan data penulis (satu per satu atau sekaligus):
    - Nama lengkap (wajib)
@@ -25,21 +51,20 @@ FLOW WAJIB saat user minta buat makalah:
    - Program Studi (wajib)
    - Fakultas (wajib)
    - Dosen Pengampu (opsional, boleh dikosongkan)
-3. Cari logo universitas dengan tool search_logo
-4. Tahun OTOMATIS pakai tahun sekarang, JANGAN tanya ke user
-5. Cek apakah ada pedoman dengan get_pedoman — jika ada, WAJIB ikuti struktur dari pedoman
-6. Lakukan research_topic dengan judul
-7. Generate konten makalah menggunakan prompt generate_makalah (sertakan struktur pedoman jika ada)
-8. TUNJUKKAN konten makalah ke user dan TANYA: "Apakah konten sudah sesuai? Ada yang ingin diubah?"
-9. Jika user minta edit/ubah, lakukan perubahan sesuai permintaan user lalu tunjukkan lagi
-10. Jika user sudah setuju (bilang "ok", "sudah", "lanjut", "simpan", dll), baru simpan dengan save_makalah (format "both")
-11. Setelah disimpan, tanyakan: "File sudah disimpan. Ada yang ingin diubah lagi?"
-12. Jika user minta ubah lagi, edit konten dan simpan ulang dengan save_makalah
+3. Lanjut ke step 4 di atas
 
-Jika user kasih file PDF sebagai contoh/pedoman:
+## Jika user kasih file PDF sebagai contoh/pedoman:
 - Langsung panggil set_pedoman dengan path PDF tersebut
 - JANGAN tanya user apakah mau set pedoman, langsung simpan saja
 - Konfirmasi ke user: "Pedoman sudah disimpan, struktur makalah selanjutnya akan mengikuti format ini."
+
+## PENTING - Parsing Data dari Prompt:
+- Nama bisa setelah "Nama:", "nama:", "Nama :", atau "oleh"
+- NIM bisa setelah "NIM:", "nim:", "NIM :", atau angka panjang (8-12 digit)
+- Program Studi bisa "Program Studi:", "Prodi:", "program studi:", atau singkatan seperti "PJJ Informatika"
+- Fakultas bisa setelah "Fakultas:", "fakultas:", "Fakultas :"
+- Universitas biasanya di akhir, setelah "Universitas:", "universitas:", atau nama lengkap universitas
+- Judul makalah biasanya dalam tanda petik, setelah "judul", "tentang", atau di awal prompt
 """,
 )
 
