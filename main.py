@@ -35,8 +35,9 @@ FLOW WAJIB saat user minta buat makalah:
 7. Cari logo universitas dengan tool search_logo
 8. Tahun OTOMATIS pakai tahun sekarang (2026), JANGAN tanya ke user
 9. Cek apakah ada pedoman dengan get_pedoman — jika ada, WAJIB ikuti struktur dari pedoman
-10. Lakukan research_topic dengan judul
-11. Generate konten makalah menggunakan prompt generate_makalah (sertakan struktur pedoman jika ada)
+10. JIKA user TIDAK kasih referensi sendiri, lakukan research_topic dengan judul
+11. JIKA user SUDAH kasih referensi, skip research_topic dan gunakan referensi user
+12. Generate konten makalah menggunakan prompt generate_makalah (sertakan struktur pedoman jika ada)
 12. TUNJUKKAN konten makalah ke user dan TANYA: "Apakah konten sudah sesuai? Ada yang ingin diubah?"
 13. TUNGGU feedback dari user, JANGAN langsung save!
 14. Jika user minta edit/ubah, lakukan perubahan sesuai permintaan user lalu tunjukkan lagi
@@ -58,6 +59,16 @@ FLOW WAJIB saat user minta buat makalah:
 3. KONFIRMASI semua data: "Data yang saya terima: [list]. Apakah sudah benar?"
 4. TUNGGU konfirmasi user sebelum lanjut
 5. Lanjut ke step 7 di atas
+
+## Jika user kasih REFERENSI sendiri:
+- User bisa kasih referensi dalam format:
+  * List URL: "Referensi: https://url1.com, https://url2.com"
+  * List judul + URL: "Referensi: 1. Judul (https://url1.com) 2. Judul (https://url2.com)"
+  * Text biasa: User paste text/kutipan dari sumber
+- JANGAN panggil research_topic jika user sudah kasih referensi
+- Gunakan referensi yang user berikan untuk generate_makalah prompt
+- Format referensi user menjadi JSON yang sesuai untuk generate_makalah
+- Konfirmasi: "Saya akan gunakan referensi yang Anda berikan. Lanjut generate?"
 
 ## Jika user kasih file PDF sebagai contoh/pedoman:
 - Langsung panggil set_pedoman dengan path PDF tersebut
