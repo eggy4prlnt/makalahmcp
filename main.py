@@ -62,13 +62,18 @@ FLOW WAJIB saat user minta buat makalah:
 
 ## Jika user kasih REFERENSI sendiri:
 - User bisa kasih referensi dalam format:
-  * List URL: "Referensi: https://url1.com, https://url2.com"
+  * Dengan keyword: "Referensi: https://url1.com, https://url2.com"
+  * Tanpa keyword: Langsung URL "https://url1.com" atau list URL
   * List judul + URL: "Referensi: 1. Judul (https://url1.com) 2. Judul (https://url2.com)"
   * Text biasa: User paste text/kutipan dari sumber
-- JANGAN panggil research_topic jika user sudah kasih referensi
+- Detect referensi dengan cara:
+  * Cari keyword "Referensi:" atau "referensi:" ATAU
+  * Detect URL pattern (https://..., http://...) di prompt user
+  * Jika ada 1+ URL di prompt, anggap itu referensi user
+- JANGAN panggil research_topic jika user sudah kasih referensi (ada URL atau keyword)
 - Gunakan referensi yang user berikan untuk generate_makalah prompt
 - Format referensi user menjadi JSON yang sesuai untuk generate_makalah
-- Konfirmasi: "Saya akan gunakan referensi yang Anda berikan. Lanjut generate?"
+- Konfirmasi: "Saya akan gunakan referensi yang Anda berikan (X referensi). Lanjut generate?"
 
 ## Jika user kasih file PDF sebagai contoh/pedoman:
 - Langsung panggil set_pedoman dengan path PDF tersebut
@@ -500,69 +505,61 @@ ATURAN TAMBAHAN:
 """
 
 
+@mcp.custom_route("/download/{filename}", methods=["GET"])
+async def download_file(request):
+    """Download generated makalah file"""
+    from starlette.responses import FileResponse, JSONResponse
+
+    filename = request.path_params['filename']
+    output_dir = os.path.expanduser("~/Documents")
+    file_path = os.path.join(output_dir, filename)
+
+    if not os.path.exists(file_path):
+        return JSONResponse({"error": "File not found", "path": file_path}, status_code=404)
+
+    # Determine media type
+    if filename.endswith(".docx"):
+        media_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    elif filename.endswith(".pdf"):
+        media_type = "application/pdf"
+    else:
+        media_type = "application/octet-stream"
+
+    return FileResponse(
+        path=file_path,
+        media_type=media_type,
+        filename=filename
+    )
+
+
+@mcp.custom_route("/files", methods=["GET"])
+async def list_files(request):
+    """List all generated makalah files"""
+    from starlette.responses import JSONResponse
+
+    output_dir = os.path.expanduser("~/Documents")
+
+    if not os.path.exists(output_dir):
+        return JSONResponse({"files": [], "count": 0})
+
+    files = []
+    for filename in os.listdir(output_dir):
+        if filename.startswith("Makalah - ") and (filename.endswith(".docx") or filename.endswith(".pdf")):
+            file_path = os.path.join(output_dir, filename)
+            stat = os.stat(file_path)
+            files.append({
+                "filename": filename,
+                "size": stat.st_size,
+                "created": datetime.fromtimestamp(stat.st_ctime).isoformat(),
+                "download_url": f"/download/{filename}"
+            })
+
+    return JSONResponse({"files": files, "count": len(files)})
+
+
 if __name__ == "__main__":
     import sys
     if "--http" in sys.argv:
-        # Add download endpoints for HTTP mode
-        from fastapi.responses import FileResponse
-        from fastapi.middleware.cors import CORSMiddleware
-
-        app = mcp.get_app()
-
-        # Add CORS
-        app.add_middleware(
-            CORSMiddleware,
-            allow_origins=["*"],
-            allow_credentials=True,
-            allow_methods=["*"],
-            allow_headers=["*"],
-        )
-
-        @app.get("/download/{filename}")
-        async def download_file(filename: str):
-            """Download generated makalah file"""
-            output_dir = os.path.expanduser("~/Documents")
-            file_path = os.path.join(output_dir, filename)
-
-            if not os.path.exists(file_path):
-                return {"error": "File not found", "path": file_path}
-
-            # Determine media type
-            if filename.endswith(".docx"):
-                media_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            elif filename.endswith(".pdf"):
-                media_type = "application/pdf"
-            else:
-                media_type = "application/octet-stream"
-
-            return FileResponse(
-                path=file_path,
-                media_type=media_type,
-                filename=filename
-            )
-
-        @app.get("/files")
-        async def list_files():
-            """List all generated makalah files"""
-            output_dir = os.path.expanduser("~/Documents")
-
-            if not os.path.exists(output_dir):
-                return {"files": []}
-
-            files = []
-            for filename in os.listdir(output_dir):
-                if filename.startswith("Makalah - ") and (filename.endswith(".docx") or filename.endswith(".pdf")):
-                    file_path = os.path.join(output_dir, filename)
-                    stat = os.stat(file_path)
-                    files.append({
-                        "filename": filename,
-                        "size": stat.st_size,
-                        "created": datetime.fromtimestamp(stat.st_ctime).isoformat(),
-                        "download_url": f"/download/{filename}"
-                    })
-
-            return {"files": files, "count": len(files)}
-
         mcp.settings.host = os.environ.get("HOST", "0.0.0.0")
         mcp.settings.port = int(os.environ.get("PORT", "8000"))
         mcp.run(transport="streamable-http")
