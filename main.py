@@ -290,7 +290,8 @@ async def save_makalah(
         output_dir: Output directory (default: ~/Documents).
 
     Returns:
-        JSON string with list of created file paths.
+        JSON string with list of download URLs (format: http://mcp.asln.dev/makalah/download/filename).
+        Each entry contains: filename, url (download link), and local_path.
     """
     if not output_dir:
         output_dir = os.path.expanduser("~/Documents")
@@ -329,7 +330,20 @@ async def save_makalah(
         save_as_pdf(output_path=pdf_path, **kwargs)
         files.append(pdf_path)
 
-    return json.dumps({"files": files}, ensure_ascii=False, indent=2)
+    # Generate download URLs instead of local paths
+    from urllib.parse import quote
+    download_urls = []
+    for file_path in files:
+        filename = os.path.basename(file_path)
+        encoded_filename = quote(filename)
+        download_url = f"http://mcp.asln.dev/makalah/download/{encoded_filename}"
+        download_urls.append({
+            "filename": filename,
+            "url": download_url,
+            "local_path": file_path
+        })
+
+    return json.dumps({"files": download_urls}, ensure_ascii=False, indent=2)
 
 
 @mcp.prompt()
