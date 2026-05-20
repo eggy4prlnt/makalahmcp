@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 from datetime import datetime
 from pypdf import PdfReader
 
@@ -454,6 +455,66 @@ ATURAN TAMBAHAN:
 if __name__ == "__main__":
     import sys
     if "--http" in sys.argv:
+        # Add download endpoints for HTTP mode
+        from fastapi.responses import FileResponse
+        from fastapi.middleware.cors import CORSMiddleware
+
+        app = mcp.get_app()
+
+        # Add CORS
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=["*"],
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+
+        @app.get("/download/{filename}")
+        async def download_file(filename: str):
+            """Download generated makalah file"""
+            output_dir = os.path.expanduser("~/Documents")
+            file_path = os.path.join(output_dir, filename)
+
+            if not os.path.exists(file_path):
+                return {"error": "File not found", "path": file_path}
+
+            # Determine media type
+            if filename.endswith(".docx"):
+                media_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            elif filename.endswith(".pdf"):
+                media_type = "application/pdf"
+            else:
+                media_type = "application/octet-stream"
+
+            return FileResponse(
+                path=file_path,
+                media_type=media_type,
+                filename=filename
+            )
+
+        @app.get("/files")
+        async def list_files():
+            """List all generated makalah files"""
+            output_dir = os.path.expanduser("~/Documents")
+
+            if not os.path.exists(output_dir):
+                return {"files": []}
+
+            files = []
+            for filename in os.listdir(output_dir):
+                if filename.startswith("Makalah - ") and (filename.endswith(".docx") or filename.endswith(".pdf")):
+                    file_path = os.path.join(output_dir, filename)
+                    stat = os.stat(file_path)
+                    files.append({
+                        "filename": filename,
+                        "size": stat.st_size,
+                        "created": datetime.fromtimestamp(stat.st_ctime).isoformat(),
+                        "download_url": f"/download/{filename}"
+                    })
+
+            return {"files": files, "count": len(files)}
+
         mcp.settings.host = os.environ.get("HOST", "0.0.0.0")
         mcp.settings.port = int(os.environ.get("PORT", "8000"))
         mcp.run(transport="streamable-http")
