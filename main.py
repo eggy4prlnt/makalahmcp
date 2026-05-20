@@ -46,9 +46,12 @@ FLOW WAJIB saat user minta buat makalah:
 14. TUNGGU feedback dari user, JANGAN langsung save!
 15. Jika user minta edit/ubah, lakukan perubahan sesuai permintaan user lalu tunjukkan lagi
 16. Jika user sudah setuju (bilang "ok", "sudah", "lanjut", "simpan", dll), baru simpan dengan save_makalah (format "both")
-17. Setelah disimpan, berikan link download:
-    - DOCX: http://mcp.asln.dev/makalah/download/[filename].docx
-    - PDF: http://mcp.asln.dev/makalah/download/[filename].pdf
+17. Setelah disimpan, berikan link download (BUKAN path file lokal):
+    - Format: http://mcp.asln.dev/makalah/download/[filename dengan URL encoding]
+    - Contoh: http://mcp.asln.dev/makalah/download/Makalah%20-%20Implementasi%20AI%20di%20Sistem%20HRIS.docx
+    - JANGAN tampilkan path seperti /root/Documents/... atau ~/Documents/...
+    - Gunakan URL encoding untuk spasi (%20) dan karakter khusus
+    - Tampilkan sebagai clickable link untuk user
 18. Tanyakan: "File sudah disimpan. Ada yang ingin diubah lagi?"
 
 ## Jika user TIDAK kasih data lengkap:
