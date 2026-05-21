@@ -350,7 +350,7 @@ async def save_makalah(
 
 
 @mcp.prompt()
-def generate_makalah(title: str, references_json: str) -> str:
+def generate_makalah(title: str, references_json: str = "[]") -> str:
     """Generate a complete makalah (academic paper) from research references.
 
     Use this prompt after calling research_topic to get the proper format
@@ -358,7 +358,7 @@ def generate_makalah(title: str, references_json: str) -> str:
 
     Args:
         title: The makalah title.
-        references_json: JSON string from research_topic tool output.
+        references_json: JSON string from research_topic tool output (default: empty list).
     """
     # Load all pedoman if any exist
     pedoman_section = ""
