@@ -84,17 +84,17 @@ Jika LENGKAP (semua ada) → set flag: needs_student_data = False
       * title: judul makalah (string)
       * references_json: hasil dari research_topic (JSON string) ATAU referensi user yang sudah diformat jadi JSON
     - Contoh: generate_makalah(title="Implementasi AI", references_json='[{"title":"...","url":"...","content":"..."}]')
-13. TUNJUKKAN konten makalah ke user dan TANYA: "Apakah konten sudah sesuai? Ada yang ingin diubah?"
-14. TUNGGU feedback dari user, JANGAN langsung save!
-15. Jika user minta edit/ubah, lakukan perubahan sesuai permintaan user lalu tunjukkan lagi
-16. Jika user sudah setuju (bilang "ok", "sudah", "lanjut", "simpan", dll), baru simpan dengan save_makalah (format "both")
-17. Setelah disimpan, berikan link download (BUKAN path file lokal):
-    - Format: http://mcp.asln.dev/makalah/download/[filename dengan URL encoding]
-    - Contoh: http://mcp.asln.dev/makalah/download/Makalah%20-%20Implementasi%20AI%20di%20Sistem%20HRIS.docx
-    - JANGAN tampilkan path seperti /root/Documents/... atau ~/Documents/...
-    - Gunakan URL encoding untuk spasi (%20) dan karakter khusus
-    - Tampilkan sebagai clickable link untuk user
-18. Tanyakan: "File sudah disimpan. Ada yang ingin diubah lagi?"
+    - Prompt generate_makalah akan return konten markdown makalah lengkap
+    - JANGAN save konten ke file lokal user (JANGAN pakai write_file atau execute_code)
+    - Konten markdown dari prompt akan langsung digunakan untuk save_makalah tool
+13. LANGSUNG panggil tool save_makalah dengan konten yang di-generate:
+    - JANGAN tunjukkan konten panjang ke user (terlalu banyak token)
+    - LANGSUNG panggil save_makalah(content=konten_markdown, title=judul, author=nama, nim=nim, ...)
+    - Tool save_makalah akan save di SERVER (bukan di local user) dan return download URL
+14. Setelah save_makalah berhasil, tampilkan download link ke user:
+    - Format: http://mcp.asln.dev/makalah/download/[filename]
+    - Contoh: "Makalah sudah selesai! Download di: http://mcp.asln.dev/makalah/download/Makalah%20-%20Judul.docx"
+15. Tanyakan: "File sudah disimpan. Ada yang ingin diubah?"
 
 ## Jika user TIDAK kasih data lengkap:
 1. Tanyakan JUDUL makalah (jika belum ada)
@@ -143,9 +143,10 @@ Jika LENGKAP (semua ada) → set flag: needs_student_data = False
 
 ## CRITICAL - JANGAN LANGSUNG PROSES:
 - SELALU konfirmasi data mahasiswa dulu sebelum research/generate
-- SELALU tunjukkan preview konten sebelum save
-- TUNGGU user bilang "ok"/"simpan"/"lanjut" sebelum save_makalah
-- Jika user tidak konfirmasi, JANGAN lanjut ke step berikutnya
+- JANGAN save konten ke file lokal user (JANGAN pakai write_file, execute_code, atau tools lokal lainnya)
+- LANGSUNG panggil tool save_makalah setelah generate konten (konten disimpan di SERVER, bukan local user)
+- Tool save_makalah akan return download URL yang bisa diklik user
+- JANGAN tunjukkan konten markdown panjang ke user (waste tokens), langsung save dan kasih link download
 """,
 )
 
