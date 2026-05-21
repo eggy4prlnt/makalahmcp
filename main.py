@@ -1,6 +1,8 @@
 import json
 import os
 import sys
+import logging
+import warnings
 from datetime import datetime
 from pypdf import PdfReader
 
@@ -8,6 +10,11 @@ from mcp.server.fastmcp import FastMCP
 
 from scraper import research_topic as do_research, search_university_logo as do_search_logo
 from converter import save_as_docx, save_as_pdf
+
+# Suppress pypdf encoding warnings and errors globally
+warnings.filterwarnings('ignore', category=UserWarning, module='pypdf')
+logging.getLogger('pypdf').setLevel(logging.CRITICAL)
+logging.getLogger('pypdf._utils').setLevel(logging.CRITICAL)
 
 PEDOMAN_DIR = os.path.join(os.path.expanduser("~"), ".makalahmcp_pedoman")
 os.makedirs(PEDOMAN_DIR, exist_ok=True)
@@ -164,12 +171,6 @@ async def set_pedoman(pdf_path: str) -> str:
         return json.dumps({"error": f"File tidak ditemukan: {pdf_path}"})
 
     try:
-        import warnings
-        import logging
-        # Suppress pypdf encoding warnings and errors
-        warnings.filterwarnings('ignore', category=UserWarning, module='pypdf')
-        logging.getLogger('pypdf').setLevel(logging.CRITICAL)
-
         reader = PdfReader(pdf_path)
         all_text = []
         for i, page in enumerate(reader.pages):
