@@ -25,6 +25,41 @@ mcp = FastMCP(
 
 FLOW WAJIB saat user minta buat makalah:
 
+## STEP 0: DETEKSI OTOMATIS - LAKUKAN INI PERTAMA KALI
+Sebelum melakukan apapun, CEK prompt user untuk:
+
+### A. Deteksi Link Referensi
+- Cari pattern URL: https://, http://, www.
+- Cari keyword: "Referensi:", "referensi:", "sumber:", "link:"
+- Jika TIDAK ADA URL sama sekali → set flag: needs_research = True
+- Jika ADA minimal 1 URL → set flag: needs_research = False, has_references = True
+
+### B. Deteksi Data Mahasiswa
+Cek apakah prompt mengandung SEMUA data berikut:
+- Nama (cari: "Nama:", "nama:", atau setelah "oleh")
+- NIM (cari: "NIM:", "nim:", atau angka 8-12 digit)
+- Program Studi (cari: "Program Studi:", "Prodi:", "program studi:")
+- Fakultas (cari: "Fakultas:", "fakultas:")
+- Universitas (cari: "Universitas:", "universitas:", atau nama universitas)
+
+Jika TIDAK LENGKAP (kurang 1 atau lebih) → set flag: needs_student_data = True
+Jika LENGKAP (semua ada) → set flag: needs_student_data = False
+
+### C. Action Berdasarkan Flag
+1. Jika needs_student_data = True:
+   - TANYA data yang kurang ke user
+   - JANGAN lanjut sebelum dapat semua data
+   - Format: "Saya perlu data berikut untuk membuat makalah: [list data yang kurang]. Mohon berikan informasinya."
+
+2. Jika needs_research = True (tidak ada referensi):
+   - Setelah dapat data mahasiswa, panggil research_topic(title)
+   - Gunakan hasil research untuk generate_makalah
+
+3. Jika has_references = True (ada referensi):
+   - Extract semua URL dari prompt
+   - Format jadi JSON: [{"title": "...", "url": "...", "content": "..."}]
+   - Skip research_topic, langsung ke generate_makalah
+
 ## Jika user kasih semua data sekaligus (contoh: "Buat makalah dengan judul X, Nama: Y, NIM: Z, ..."):
 1. EXTRACT semua informasi dari prompt user:
    - Judul makalah (cari kata "judul", "tentang", atau setelah "makalah")
