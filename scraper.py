@@ -141,7 +141,7 @@ async def fetch_page_content(url: str, image_start_idx: int = 0) -> dict:
         "images": [],
     }
     try:
-        async with httpx.AsyncClient(headers=HEADERS, follow_redirects=True, timeout=30) as client:
+        async with httpx.AsyncClient(headers=HEADERS, follow_redirects=True, timeout=15) as client:
             resp = await client.get(url)
             resp.raise_for_status()
             content_type = resp.headers.get("content-type", "")
@@ -184,23 +184,25 @@ async def fetch_page_content(url: str, image_start_idx: int = 0) -> dict:
                 text_parts = [p.get_text(strip=True) for p in paragraphs if len(p.get_text(strip=True)) > 30]
                 result["content"] = "\n\n".join(text_parts)
 
-            # Extract images
+            # Extract images in parallel
             if main:
+                import asyncio
                 img_tags = main.find_all("img", src=True)
-                img_idx = image_start_idx
-                for img in img_tags:
+                img_tasks = []
+                for idx, img in enumerate(img_tags[:5]):  # Limit to 5 images
                     src = img.get("src", "")
                     if not src or src.startswith("data:"):
                         continue
                     img_url = urljoin(url, src)
-                    downloaded = await _download_image(client, img_url, img_idx)
-                    if downloaded:
-                        alt = img.get("alt", "")
-                        downloaded["caption"] = alt
-                        result["images"].append(downloaded)
-                        img_idx += 1
-                    if len(result["images"]) >= 5:
-                        break
+                    img_tasks.append(_download_image(client, img_url, image_start_idx + idx))
+
+                if img_tasks:
+                    downloaded_images = await asyncio.gather(*img_tasks, return_exceptions=True)
+                    for img, downloaded in zip(img_tags[:5], downloaded_images):
+                        if isinstance(downloaded, dict):
+                            alt = img.get("alt", "")
+                            downloaded["caption"] = alt
+                            result["images"].append(downloaded)
     except Exception:
         pass
     return result
@@ -208,17 +210,20 @@ async def fetch_page_content(url: str, image_start_idx: int = 0) -> dict:
 
 async def research_topic(title: str, num_results: int = 5) -> dict:
     """Research a topic by searching the web and fetching content from results."""
+    import asyncio
+
     urls = await web_search(title, num_results)
     if not urls:
         return {"references": [], "error": "Tidak dapat menemukan hasil pencarian. Coba judul yang berbeda."}
 
+    # Fetch all URLs in parallel for better performance
+    tasks = [fetch_page_content(url, image_start_idx=i*5) for i, url in enumerate(urls)]
+    pages = await asyncio.gather(*tasks, return_exceptions=True)
+
     references = []
-    image_idx = 0
-    for url in urls:
-        page = await fetch_page_content(url, image_start_idx=image_idx)
-        if page["content"]:
+    for page in pages:
+        if isinstance(page, dict) and page.get("content"):
             references.append(page)
-            image_idx += len(page["images"])
 
     return {"references": references}
 
