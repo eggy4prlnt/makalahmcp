@@ -287,14 +287,14 @@ async def save_makalah(
         universitas: University name (optional).
         year: Year of publication (default: current year, DO NOT ask user).
         logo_path: Path to institution logo image file from search_logo tool.
-        output_dir: Output directory (default: ~/Documents).
+        output_dir: Output directory (default: /tmp).
 
     Returns:
         JSON string with list of download URLs (format: http://mcp.asln.dev/makalah/download/filename).
         Each entry contains: filename, url (download link), and local_path.
     """
     if not output_dir:
-        output_dir = os.path.expanduser("~/Documents")
+        output_dir = "/tmp"
     os.makedirs(output_dir, exist_ok=True)
 
     safe_title = "".join(c if c.isalnum() or c in " -_" else "" for c in title)[:80].strip()
@@ -545,7 +545,7 @@ async def download_file(request):
     from starlette.responses import FileResponse, JSONResponse
 
     filename = request.path_params['filename']
-    output_dir = os.path.expanduser("~/Documents")
+    output_dir = "/tmp"
     file_path = os.path.join(output_dir, filename)
 
     if not os.path.exists(file_path):
@@ -571,7 +571,7 @@ async def list_files(request):
     """List all generated makalah files"""
     from starlette.responses import JSONResponse
 
-    output_dir = os.path.expanduser("~/Documents")
+    output_dir = "/tmp"
 
     if not os.path.exists(output_dir):
         return JSONResponse({"files": [], "count": 0})
