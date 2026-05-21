@@ -165,8 +165,10 @@ async def set_pedoman(pdf_path: str) -> str:
 
     try:
         import warnings
-        # Suppress pypdf encoding warnings
+        import logging
+        # Suppress pypdf encoding warnings and errors
         warnings.filterwarnings('ignore', category=UserWarning, module='pypdf')
+        logging.getLogger('pypdf').setLevel(logging.CRITICAL)
 
         reader = PdfReader(pdf_path)
         all_text = []
